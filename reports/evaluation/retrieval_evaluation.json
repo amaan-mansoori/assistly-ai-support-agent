@@ -1,0 +1,13 @@
+{
+  "retrieval_corpus_size": 152535,
+  "golden_examples_evaluated": 220,
+  "excluded_golden_ids": 220,
+  "excluded_exact_text_duplicates": 2221,
+  "embedding_model": "sklearn-tfidf-word-unigram-bigram",
+  "mean_top1_cosine_similarity": 0.3263460376723246,
+  "median_top1_cosine_similarity": 0.29896602034568787,
+  "intent-match@1": 0.3181818181818182,
+  "intent-match@3": 0.4863636363636364,
+  "intent-match@5": 0.5681818181818182,
+  "training_label_limitation": "Retrieved intent labels are derived by the existing deterministic heuristic, not human labels."
+}

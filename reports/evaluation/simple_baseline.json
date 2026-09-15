@@ -1,0 +1,254 @@
+{
+  "number_of_training_examples": 117722,
+  "number_of_evaluation_examples": 220,
+  "number_of_classes_used_for_training": 11,
+  "training_classes": [
+    "account_access_security",
+    "delivery_marked_delivered_missing",
+    "delivery_status_delay",
+    "item_condition_or_fulfilment",
+    "marketplace_seller",
+    "order_cancellation_or_change",
+    "other_unclear",
+    "payment_charge_issue",
+    "prime_membership",
+    "product_availability_pricing",
+    "return_refund"
+  ],
+  "accuracy": 0.4954545454545455,
+  "macro_f1": 0.5352619571003528,
+  "weighted_f1": 0.5122470240017346,
+  "per_intent": {
+    "delivery_status_delay": {
+      "precision": 0.7727272727272727,
+      "recall": 0.32075471698113206,
+      "f1": 0.4533333333333333,
+      "support": 53
+    },
+    "delivery_marked_delivered_missing": {
+      "precision": 1.0,
+      "recall": 0.21052631578947367,
+      "f1": 0.34782608695652173,
+      "support": 19
+    },
+    "return_refund": {
+      "precision": 0.7037037037037037,
+      "recall": 0.8260869565217391,
+      "f1": 0.76,
+      "support": 23
+    },
+    "item_condition_or_fulfilment": {
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "f1": 0.4,
+      "support": 21
+    },
+    "order_cancellation_or_change": {
+      "precision": 1.0,
+      "recall": 0.26666666666666666,
+      "f1": 0.42105263157894735,
+      "support": 15
+    },
+    "prime_membership": {
+      "precision": 0.4444444444444444,
+      "recall": 0.5333333333333333,
+      "f1": 0.48484848484848486,
+      "support": 15
+    },
+    "account_access_security": {
+      "precision": 1.0,
+      "recall": 0.8666666666666667,
+      "f1": 0.9285714285714286,
+      "support": 15
+    },
+    "payment_charge_issue": {
+      "precision": 0.7142857142857143,
+      "recall": 0.7692307692307693,
+      "f1": 0.7407407407407407,
+      "support": 13
+    },
+    "product_availability_pricing": {
+      "precision": 0.2222222222222222,
+      "recall": 0.4,
+      "f1": 0.2857142857142857,
+      "support": 5
+    },
+    "marketplace_seller": {
+      "precision": 0.8181818181818182,
+      "recall": 0.75,
+      "f1": 0.782608695652174,
+      "support": 12
+    },
+    "other_unclear": {
+      "precision": 0.19047619047619047,
+      "recall": 0.5517241379310345,
+      "f1": 0.2831858407079646,
+      "support": 29
+    }
+  },
+  "confusion_matrix_labels": [
+    "delivery_status_delay",
+    "delivery_marked_delivered_missing",
+    "return_refund",
+    "item_condition_or_fulfilment",
+    "order_cancellation_or_change",
+    "prime_membership",
+    "account_access_security",
+    "payment_charge_issue",
+    "product_availability_pricing",
+    "marketplace_seller",
+    "other_unclear"
+  ],
+  "confusion_matrix": [
+    [
+      17,
+      0,
+      2,
+      1,
+      0,
+      4,
+      0,
+      0,
+      4,
+      1,
+      24
+    ],
+    [
+      3,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12
+    ],
+    [
+      0,
+      0,
+      19,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2
+    ],
+    [
+      1,
+      0,
+      3,
+      7,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      9
+    ],
+    [
+      1,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      1,
+      1,
+      8
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      8,
+      0,
+      3,
+      0,
+      0,
+      4
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      13,
+      0,
+      0,
+      0,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      3
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      3
+    ],
+    [
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      9,
+      1
+    ],
+    [
+      0,
+      0,
+      3,
+      3,
+      0,
+      4,
+      0,
+      1,
+      2,
+      0,
+      16
+    ]
+  ],
+  "training_filtering": {
+    "total_interim_rows": 154976,
+    "golden_id_excluded": 220,
+    "duplicate_text_excluded": 422,
+    "non_english_or_unusable_excluded": 36612,
+    "unmapped_label_excluded": 0
+  }
+}

@@ -1,0 +1,49 @@
+# Default configuration for the AI support agent pipeline
+# Override any value via environment variables or a local config file.
+
+dataset:
+  name: "thoughtvector/customer-support-on-twitter"
+  # Selected brand based on empirical 7-dimension analysis
+  brand: "AmazonHelp"
+  # Subsample size for development (set after inspecting brand volumes)
+  subsample_size: null
+
+data:
+  raw_dir: "data/raw"
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
+  golden_dir: "data/golden"
+
+golden_set:
+  # Target size for hand-labelled evaluation set
+  min_examples: 150
+  max_examples: 250
+
+intents:
+  # Number of intent clusters to discover (set after EDA)
+  n_clusters: null
+
+retrieval:
+  # Top-k similar historical conversations to retrieve
+  top_k: 5
+
+agent:
+  # LLM provider: "openai" or "gemini"
+  llm_provider: "gemini"
+  model_name: "gemini-2.0-flash"
+  temperature: 0.3
+  # Confidence threshold below which the agent escalates to human
+  escalation_threshold: 0.7
+
+evaluation:
+  # Metrics to compute
+  metrics:
+    - "intent_accuracy"
+    - "reply_rouge_l"
+    - "reply_bleu"
+    - "escalation_precision"
+    - "escalation_recall"
+  # LLM judge settings
+  judge:
+    model_name: "gemini-2.0-flash"
+    num_human_comparison_samples: 50

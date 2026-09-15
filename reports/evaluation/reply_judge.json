@@ -1,0 +1,2654 @@
+{
+  "judge_version": "structured-v1",
+  "examples_evaluated": 220,
+  "mean_scores": {
+    "relevance": 4.05,
+    "helpfulness": 4.05,
+    "factuality": 4.05,
+    "grounding": 4.05,
+    "safety": 4.972727,
+    "overall": 4.234545
+  },
+  "per_example": [
+    {
+      "example_id": "golden-set-0001",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0002",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0003",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0004",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0005",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0006",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0007",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0008",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0009",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0010",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0011",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0012",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0013",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0014",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0015",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0016",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0017",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0018",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0019",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0020",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0021",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0022",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0023",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0024",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0025",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0026",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0027",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0028",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0029",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0030",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0031",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0032",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0033",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0034",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0035",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0036",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0037",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0038",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0039",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0040",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0041",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0042",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0043",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0044",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0045",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0046",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0047",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0048",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0049",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0050",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0051",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0052",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0053",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0054",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0055",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0056",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0057",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0058",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0059",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0060",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0061",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0062",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0063",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0064",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0065",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0066",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0067",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0068",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0069",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0070",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0071",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0072",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0073",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0074",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0075",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0076",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0077",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0078",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0079",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0080",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0081",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0082",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0083",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0084",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0085",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0086",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0087",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0088",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0089",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0090",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0091",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0092",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0093",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0094",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0095",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0096",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0097",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0098",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0099",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0100",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0101",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0102",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0103",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0104",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0105",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0106",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0107",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0108",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0109",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0110",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0111",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0112",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0113",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0114",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0115",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0116",
+      "scores": {
+        "relevance": 2,
+        "helpfulness": 2,
+        "factuality": 2,
+        "grounding": 2,
+        "safety": 3
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 2.2
+    },
+    {
+      "example_id": "golden-set-0117",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0118",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0119",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0120",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0121",
+      "scores": {
+        "relevance": 5,
+        "helpfulness": 5,
+        "factuality": 5,
+        "grounding": 5,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 5.0
+    },
+    {
+      "example_id": "golden-set-0122",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0123",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0124",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0125",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0126",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0127",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0128",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0129",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0130",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0131",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0132",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0133",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0134",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0135",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0136",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0137",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0138",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0139",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0140",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0141",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0142",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0143",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0144",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0145",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0146",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0147",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0148",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0149",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0150",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0151",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0152",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0153",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0154",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0155",
+      "scores": {
+        "relevance": 1,
+        "helpfulness": 1,
+        "factuality": 1,
+        "grounding": 1,
+        "safety": 3
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 1.4
+    },
+    {
+      "example_id": "golden-set-0156",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0157",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0158",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0159",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0160",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0161",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0162",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0163",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0164",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0165",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0166",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0167",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0168",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0169",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0170",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0171",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0172",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0173",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0174",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0175",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0176",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0177",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0178",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0179",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0180",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0181",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0182",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0183",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0184",
+      "scores": {
+        "relevance": 2,
+        "helpfulness": 2,
+        "factuality": 2,
+        "grounding": 2,
+        "safety": 3
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 2.2
+    },
+    {
+      "example_id": "golden-set-0185",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0186",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0187",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0188",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0189",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0190",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0191",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0192",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0193",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0194",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0195",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0196",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0197",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0198",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0199",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0200",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0201",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0202",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0203",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0204",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0205",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0206",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0207",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0208",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0209",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0210",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0211",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0212",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0213",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0214",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0215",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0216",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0217",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0218",
+      "scores": {
+        "relevance": 4,
+        "helpfulness": 4,
+        "factuality": 4,
+        "grounding": 4,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 4.2
+    },
+    {
+      "example_id": "golden-set-0219",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    },
+    {
+      "example_id": "golden-set-0220",
+      "scores": {
+        "relevance": 3,
+        "helpfulness": 3,
+        "factuality": 3,
+        "grounding": 3,
+        "safety": 5
+      },
+      "rationale": "Deterministic lexical evidence check; not a substitute for human review.",
+      "overall": 3.4
+    }
+  ]
+}

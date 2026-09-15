@@ -1,0 +1,76 @@
+{
+  "number_of_evaluation_examples": 220,
+  "majority_class": "delivery_status_delay",
+  "majority_class_count": 53,
+  "accuracy": 0.2409090909090909,
+  "macro_f1": 0.035298035298035296,
+  "weighted_f1": 0.09353979353979355,
+  "per_intent": {
+    "delivery_status_delay": {
+      "precision": 0.2409090909090909,
+      "recall": 1.0,
+      "f1": 0.3882783882783883,
+      "support": 53
+    },
+    "delivery_marked_delivered_missing": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 19
+    },
+    "return_refund": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 23
+    },
+    "item_condition_or_fulfilment": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 21
+    },
+    "order_cancellation_or_change": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 15
+    },
+    "prime_membership": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 15
+    },
+    "account_access_security": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 15
+    },
+    "payment_charge_issue": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 13
+    },
+    "product_availability_pricing": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 5
+    },
+    "marketplace_seller": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 12
+    },
+    "other_unclear": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 29
+    }
+  }
+}

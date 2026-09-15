@@ -1,0 +1,26 @@
+# Core data handling
+pandas>=2.0
+numpy>=1.24
+
+# Dataset download
+kaggle>=1.6
+
+# LLM / AI
+openai>=1.30
+google-generativeai>=0.7
+google-genai>=1.0
+
+# Similarity / embeddings
+scikit-learn>=1.3
+sentence-transformers>=2.2
+
+# Evaluation metrics
+rouge-score>=0.1.2
+nltk>=3.8
+
+# Utilities
+python-dotenv>=1.0
+tqdm>=4.65
+
+# Testing
+pytest>=7.4

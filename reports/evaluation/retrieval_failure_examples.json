@@ -1,0 +1,452 @@
+[
+  {
+    "example_id": "golden-set-0001",
+    "golden_customer_text": "@AmazonHelp Thanks, I sent an email as it's late and I doubt anything can be tracked till tomorrow anyway...",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp thanks. I sent an email",
+    "retrieved_historical_response": "@155864 Thanks for letting us know! Please keep us updated on the outcome! ^LR",
+    "similarity": 0.4547848105430603,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0002",
+    "golden_customer_text": "@AmazonHelp No, USPS says you\u2019re late in giving it to them which reflects that on their tracking number. Your customer service can\u2019t give me a reason either.",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp Why my number is blocked? Give me reason.",
+    "retrieved_historical_response": "@169834 kindly write email asking the same query, they will get back to you with an update. Appreciate your understanding. (2/2)^HR",
+    "similarity": 0.2314426600933075,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0003",
+    "golden_customer_text": "@AmazonHelp Yeah received an email for three items to be refunded all processed on the same day. One refund has already been received (received over the weekend). Stuff still states delivery date of November 9 but provides option to start a refund or cancellation.",
+    "golden_human_intent": "return_refund",
+    "retrieved_customer_text": "@AmazonHelp All good. Package must have been lost, so the refund has already been processed",
+    "retrieved_historical_response": "@491120 I'm glad we were able to help! Please let us know if you need any further assistance. ^LR",
+    "similarity": 0.20659124851226807,
+    "retrieved_heuristic_intent": "return_refund"
+  },
+  {
+    "example_id": "golden-set-0004",
+    "golden_customer_text": "@AmazonHelp I\u2019ve contacted support on Monday and they promised a wrong delivery date. I\u2019ve called yesterday and had the worst support ever.",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp  You guys sucks, you have the worst support ever.",
+    "retrieved_historical_response": "@139220 I'm sorry to hear you've had a negative experience with us. Without providing account details, can you give us more information on the issue you're having? ^JS",
+    "similarity": 0.3334254324436188,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0005",
+    "golden_customer_text": "@115830 still waiting for my package apparently left Preston at 9:45 another day wasted sat in waiting",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp @115830 Still waiting for a reply \ud83d\ude44\ud83d\ude44",
+    "retrieved_historical_response": "@186453 So sorry about this! We'd love to help! Have you had the chance to review available options here?: https://t.co/bTyRiizkXg ^VB",
+    "similarity": 0.3548739552497864,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0006",
+    "golden_customer_text": "@AmazonHelp It\u2019s fine when I try to deliver it to my home.",
+    "golden_human_intent": "other_unclear",
+    "retrieved_customer_text": "@AmazonHelp Why to reinstall if it's fine.???",
+    "retrieved_historical_response": "@182539 If its working fine. You may want to try again and let us know if the issue still persists. ^SG",
+    "similarity": 0.30091869831085205,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0007",
+    "golden_customer_text": "@115821 can't get their shit together - Possible delay in delivery due to arrival at incorrect carrier facility - on my order for 8 days.",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp Tracking msg\"delay in delivery due to arrival at incorrect carrier facility\"\nThen you apologise, arrange redelivery nextday, nextday delayed",
+    "retrieved_historical_response": "@191798 Apologies - It will need to be redirected - does the order status indicate a new delivery date ? ^TD",
+    "similarity": 0.5280948877334595,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0008",
+    "golden_customer_text": ". @115821.in @115821 @amazonHelp I bought a new kindle on March of 2017. it became like this. Requested for replacement many times. still no pickup has been done. still waiting.. see what happens on https://t.co/n9NK7kTxMP via @126972",
+    "golden_human_intent": "item_condition_or_fulfilment",
+    "retrieved_customer_text": "@AmazonHelp Done. Still no response/ resolution",
+    "retrieved_historical_response": "@350979 We've received your details and sent correspondence to you. Kindly check here: https://t.co/8DAc10S7ww. ^VN",
+    "similarity": 0.21539510786533356,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0009",
+    "golden_customer_text": "I'm meant to be in Glasgow now but I've been waiting for this package from amazon that's out for delivery and I'm fucking furious?",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "I have a package from amazon that says it\u2019s out for delivery right now but..... today\u2019s Sunday. USPS delivers on sundays too? \ud83e\udd14",
+    "retrieved_historical_response": "@671345 USPS does deliver on Sunday in some areas. Keep an eye out for your package and keep us posted! ^JS",
+    "similarity": 0.27631503343582153,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0010",
+    "golden_customer_text": "@AmazonHelp so I preordered my xbox one with you ages ago at the hoping its here for release day, now I get an email saying it's delayed",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp Ages ago",
+    "retrieved_historical_response": "@322303 Thanks for responding. Kindly request you to wait and our team will contact you at the earliest. ^GD",
+    "similarity": 0.34235918521881104,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0011",
+    "golden_customer_text": ".@AmazonHelp @115850 one.month to the order and still not dispatched ??? Kindly enlighten me @119351 @118702 @15316 https://t.co/POoQb5nFUe",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@15316 @AmazonHelp @115850 @115851  https://t.co/qbNamJqinp",
+    "retrieved_historical_response": "@162750 Sorry to know that. Provide us your details here: https://t.co/beaaDm0muc I will look into it and assist you further. ^GU",
+    "similarity": 0.26167038083076477,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0012",
+    "golden_customer_text": "So my cookie sheets were left inside my mailbox (how?!?) 5 hours ago according to @115821 and @118706 . Still waiting. Maybe tomorrow? https://t.co/wJnqFANPRu",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp It says it was left inside my mailbox but it wasn\u2019t. I just checked.",
+    "retrieved_historical_response": "@460449 Some carreirs can mark packages as delivered up to 36 hours prior to arrival. Please let us know if it doesn't arrive in this time. ^KH",
+    "similarity": 0.32548248767852783,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0013",
+    "golden_customer_text": "@AmazonHelp Well at 20:30 they decided to change the status of the parcel and it now says expected delivery by 19th october(!) how can that be?",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp And then it turns up at 20:30. FFS!",
+    "retrieved_historical_response": "@132637 Oh my! Thank you for keeping us in the loop, Mark! Please let us know if you have further questions or concerns. We're here to help! ^TG",
+    "similarity": 0.22326964139938354,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0014",
+    "golden_customer_text": "@115821 Im still waiting for it.",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@115830 i ordered a fan it never showed up and im still waiting for my refund ???",
+    "retrieved_historical_response": "@456012 We'd like to look into this. Please reach out to us via phone/chat here: https://t.co/JzP7hlA23B. We're here to help. ^AX",
+    "similarity": 0.4118185043334961,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0015",
+    "golden_customer_text": "@AmazonHelp\n\nI ordered a product from yourselves &amp; it still hasn't arrived as it was meant to come the next day. I contacted the seller",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp The product from yourselves",
+    "retrieved_historical_response": "@387432 Please give us a call: https://t.co/JzP7hlA23B so we can look into this further with you. ^CO",
+    "similarity": 0.37303435802459717,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0016",
+    "golden_customer_text": "Dear @115850 See the reason for delay. Please try to deliver my product as soon as possible https://t.co/Cy9PBLzlZo",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp Dear Please Deliver My Product As Soon As Possible... It's Allreay 2 Days Late  Than Delivery Date",
+    "retrieved_historical_response": "@660333 I'm sorry about the delay in delivering your order. Please connect with us here:  https://t.co/vlvfJr4nN9. We\u2019ll look into it. ^SB",
+    "similarity": 0.45019611716270447,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0017",
+    "golden_customer_text": "Is quality at @115821 going down?  Another delayed delivery today.",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "Another delayed delivery @115830 ? Expected better paying for prime.",
+    "retrieved_historical_response": "@133240 Sorry to hear that, Steffan. Can I ask if you were provided with a new delivery date?^TI",
+    "similarity": 0.30757758021354675,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0018",
+    "golden_customer_text": "@AmazonHelp No reason...just delayed...again and again. If I was told the truth on Friday or Saturday, I could have salvaged my client relationship. Too late today... So, I will share my story with everyone I meet...My new biz will be personally meeting every small biz in the area.",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp No I contacted just delayed \ud83d\ude11",
+    "retrieved_historical_response": "@681659 Please keep us posted on the delivery. ^JF",
+    "similarity": 0.20587337017059326,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0019",
+    "golden_customer_text": "@115821 so ridiculous how my prime package isn't here yet..  it's already so late here \ud83d\ude24",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp My package is not here yet",
+    "retrieved_historical_response": "@125005 Carriers have until 8 PM to deliver orders. Have we missed the delivery date shown here: https://t.co/Y5jpI9gRhE? ^VS",
+    "similarity": 0.25322777032852173,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0020",
+    "golden_customer_text": "@115850 i had to cancel my order due to late delivery of Order# 407-5069560-4812362. For past 3 orders facing same late delivery issue.",
+    "golden_human_intent": "order_cancellation_or_change",
+    "retrieved_customer_text": "Poor service @AmazonHelp \nLate delivery\nGhatia @115850",
+    "retrieved_historical_response": "@416102 We've responded to you here: https://t.co/Gt21zk1S4g. ^BV",
+    "similarity": 0.31218600273132324,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0021",
+    "golden_customer_text": "@AmazonHelp No action taken on the delivery delay issue.13 days since order placed. Apathy 2wards nonprime members.\ud83d\ude0f\nCust service lies a lot",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp No action taken yet.",
+    "retrieved_historical_response": "@361238 I understand your concern, Nitin. Please revert to the correspondence you've received from us. I'll get back to you. ^HD",
+    "similarity": 0.3381086587905884,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0022",
+    "golden_customer_text": "@115850 hopeless delivery system. Pay more for delay and lost a great deal from HP.Would have saved 1300 but needed it urgently. Lost both https://t.co/bWMB9MZh78",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@115850 please give me 1300 back which i would have saved if ordered from HP. Wanted1 day delivery so choose amazon. Lost money and time https://t.co/z1X46ElJ1N",
+    "retrieved_historical_response": "@191719 your order/account details as we consider them to be personal information. Our Twitter page is visible to the public. [2/2] ^NS",
+    "similarity": 0.28618600964546204,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0023",
+    "golden_customer_text": "@115821 Customer since way before Prime existed. FYI, last few and many deliveries are becoming unreliable and late. #badexperience #moonopolywontlast",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp why even use usps, when they are constantly unreliable and late? Is there even a point to prime anymore, when packages are always late? https://t.co/jELKNW9kx1",
+    "retrieved_historical_response": "@263279 Anu, thank you for being a Prime member. I'm sorry to hear your Prime delivery has been delayed. Have you checked the tracking information on the USPS site? If so, can you tell me what kind of delivery it is, e.g. Parcel Select? ^SY",
+    "similarity": 0.19091714918613434,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0024",
+    "golden_customer_text": "@AmazonHelp We called as soon as it happened.  The packages have been picked up and are out for delivery.  The guy who left it said it was his second day and the lady who picked them up said she stopped to help him and he said he lost the packages. \ud83e\udd14",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp It was supposed to be delivered yesterday and I called today and customer service said it was supposed to go out for delivery today but wasn't picked up for delivery.",
+    "retrieved_historical_response": "@704501 Which carrier was assigned to deliver the package? You can review this information here: https://t.co/EKXRLsnxJu ^JS",
+    "similarity": 0.19695904850959778,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0025",
+    "golden_customer_text": "@AmazonHelp Its out for delivery since last 3 days. None of your courier gis called me https://t.co/O5uMejjs4y",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@115850 tracking no. 447197427003 out for delivery since last 2 days. Is it snailmail or usp of Amazon prime membership.",
+    "retrieved_historical_response": "@191833 Please don\u2019t provide your order details as we consider them to be personal info. Our page is visible to public. ^SG(2/2)",
+    "similarity": 0.3862798810005188,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0026",
+    "golden_customer_text": "Is there any way of checking the delivery driver of an @115830 parcel. Driver came to door and delivered 2 parcels, said he had a 3rd in the van and would come back with it...never returned. Could someone contact us to discuss the missing package",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp Is there any way to contact the driver?",
+    "retrieved_historical_response": "@294489 Please reach out to us so we can escalate to the carrier:  https://t.co/JzP7hlA23B  ^TD",
+    "similarity": 0.23060868680477142,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0027",
+    "golden_customer_text": "So, @115821 says it arrives today by 8pm. @UPSHelp says it arrives in a time window from 12:30pm to 4:30pm and that it's \"on time\". The order is nowhere near to where it's supposed to be delivered. Who has the right info then? https://t.co/P1hW2778YB",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp It was supposed to be delivered today by 8pm",
+    "retrieved_historical_response": "@533148 I'm sorry it's late! Late packages are typically delivered the next day. Please let us know if it arrives tomorrow. ^RM",
+    "similarity": 0.2618817687034607,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0028",
+    "golden_customer_text": "I didn't receive delivery &amp; it's showing delivered. This is the 2nd time I'm facing this issue after paying online @115821 @115850 fix it! https://t.co/r92OMSK9xM",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp No, and this is the 2nd time this month!",
+    "retrieved_historical_response": "@415648 Without sharing account information, can you verify who the carrier was? You can find that here: https://t.co/Y5jpI9gRhE ^TH",
+    "similarity": 0.25132888555526733,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0029",
+    "golden_customer_text": "@AmazonHelp half of my order is still missing. i paid for one day delivery, this is completely unacceptable, my order was a day late and half of it is still missing - fix it. 'My Orders' says its been delivered. DM me if need be",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp My package is still missing.",
+    "retrieved_historical_response": "@157750 Oh my! We don't have access to your account via Twitter. Please reach out to us here so we can look into this together: https://t.co/hApLpMlfHN ^MO",
+    "similarity": 0.3915289640426636,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0030",
+    "golden_customer_text": "Contact Amazon, say package hasn\u2019t been delivered at all, neighbour doesn\u2019t have it, person they say it was handed to was not there. They\u2019ll investigate, they say. 20 mins later get an email saying \u2018It\u2019s fine, it\u2019s been delivered to your neighbour\u2019\n\n&lt;picard_facepalm.gif&gt;",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp Just had an email saying my parcel has been delivered to a neighbour. 2 mins later driver arrives at my door!",
+    "retrieved_historical_response": "@261461 I'm sorry the status was incorrect and if it caused a misunderstanding. I'm glad you've received the parcel. ^MG",
+    "similarity": 0.25868910551071167,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0031",
+    "golden_customer_text": "I had placed an order which track id was 216257294752. However i have not received the book and it shows delivered.@115850",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp I have not received",
+    "retrieved_historical_response": "@647618 That's strange, Varun. If you've responded to the email correspondence, you will receive an update shortly. Request you to wait. If you still don't receive any correspondence, please get back to us so that we will assist you.  ^NK",
+    "similarity": 0.2511700689792633,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0032",
+    "golden_customer_text": "@AmazonHelp I did not received my ordr which was supposed to be delivered yesterday and updated the delivery status to false as delivery attempted",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp I have not received my package which was to be delivered yesterday.",
+    "retrieved_historical_response": "@318100 we'll be happy to help. 2/2 ^SH",
+    "similarity": 0.36980846524238586,
+    "retrieved_heuristic_intent": "delivery_marked_delivered_missing"
+  },
+  {
+    "example_id": "golden-set-0033",
+    "golden_customer_text": "@115830 Hi I Am a prime member and ordered an item which was meant to be delivered 1st of November and i still have not received it. App or website doesn't have a option for this problem so any chance of my item or a refund?",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "@AmazonHelp Hi I'm a prime member and ordered an item over 10 days ago for next day delivery and it still hasn't turned up. Can you help as app or website doesn't have a option for this problem thank you",
+    "retrieved_historical_response": "@667384 Amazon Prime Two-Day Shipping refers to the transit time after your order ships, not after the order is placed. We always aim to meet the delivery date provided during checkout and in your order confirmation e-mail. Are we missing this promised date?  ^CH",
+    "similarity": 0.4240362346172333,
+    "retrieved_heuristic_intent": "prime_membership"
+  },
+  {
+    "example_id": "golden-set-0034",
+    "golden_customer_text": "@115821 your delivery partners are horrible. Over the past several months we have order multiple items and they are delivered to the wrong address. Your cust service has been horrible as well. In the last week there have been 11 pkgs missing or delivered wrong in our complex.",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp My order was delivered to the wrong address.",
+    "retrieved_historical_response": "@249038 Oh no, Shae! That's certainly not what we want for our customers. We'd like to have a member of our team look into this for you. When you have a moment, please provide us with your order details here: https://t.co/s1RbwZVZAm ^NS",
+    "similarity": 0.2257605493068695,
+    "retrieved_heuristic_intent": "delivery_marked_delivered_missing"
+  },
+  {
+    "example_id": "golden-set-0035",
+    "golden_customer_text": "@AmazonHelp Still looking for some assistance in locating my package that was delivered to a wrong address. https://t.co/L2bVuiRB10",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp My order was delivered to the wrong address.",
+    "retrieved_historical_response": "@249038 Oh no, Shae! That's certainly not what we want for our customers. We'd like to have a member of our team look into this for you. When you have a moment, please provide us with your order details here: https://t.co/s1RbwZVZAm ^NS",
+    "similarity": 0.3133184313774109,
+    "retrieved_heuristic_intent": "delivery_marked_delivered_missing"
+  },
+  {
+    "example_id": "golden-set-0036",
+    "golden_customer_text": "@AmazonHelp Our package says that it was delivered today \"to a resident\" but we never received it. Not in mailbox or neighbors. Confused.",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp My package says it was delivered Monday but I never received it.",
+    "retrieved_historical_response": "@423457 I'm sorry to hear this! Have you had a chance to report this to our Customer Support team: https://t.co/hApLpMlfHN? ^ME",
+    "similarity": 0.3386732339859009,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0037",
+    "golden_customer_text": "Was super excited to come home and lay out my new rug from @115821 that was supposed to be delivered only to find it's not here #missing #wheresmyrug https://t.co/CFotaNbpck",
+    "golden_human_intent": "delivery_status_delay",
+    "retrieved_customer_text": "When you get so excited to come home and have a movie night and the film hasn't been delivered. Wahhh @115821",
+    "retrieved_historical_response": "@280428 Some couriers do deliver until 21:00! Has there been an update to the tracking info: https://t.co/aaDyEz1VgE ? ^LB",
+    "similarity": 0.2773185074329376,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0038",
+    "golden_customer_text": "Has anyone ever not received a package from amazon that says it's delivered? any recs on what to do?",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "Has anyone ever ordered from @115821 and it says it was delivered and 3 days later it's still not there?! I'm having the worst luck lately!\ud83d\ude2d",
+    "retrieved_historical_response": "@475045 We'd like to help! Here's some tips that can help locate the package: https://t.co/b9LsG7YwlP. Let us know if that works! ^CS",
+    "similarity": 0.2807191014289856,
+    "retrieved_heuristic_intent": "delivery_marked_delivered_missing"
+  },
+  {
+    "example_id": "golden-set-0039",
+    "golden_customer_text": "@AmazonHelp ordered a pressure cooker order no.  171-8169375-1307500. but amazon delivered it on wrong address. no help from customer care. even they are asking me to check with the neighbours and society. too bad response. completely carelessness. https://t.co/2QBVWSISUA",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@115850 Order no 171-9050354-4997109",
+    "retrieved_historical_response": "@511105 Please don't provide your details, as we consider it to be personal info. Our Twitter page is visible to the public. ^AM",
+    "similarity": 0.25526905059814453,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0040",
+    "golden_customer_text": "@AmazonHelp Yes they were. All through Amazon. There have been occasions that your delivery service has delivered to the wrong address and even stolen.",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp Yes they were",
+    "retrieved_historical_response": "@140014 Have you received any email updates confirming a delay? That information can be found here: https://t.co/g62nreJoeJ ^QJ",
+    "similarity": 0.3712509572505951,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0041",
+    "golden_customer_text": "@AmazonHelp Hi, I've still not received my product. Should I file a police complaint as you've not delivered my product but updated status to delivered??",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp I\u2019ve still not received my items",
+    "retrieved_historical_response": "@208734 Oh no! I'm sorry it hasn't arrived yet. We'd like to see what options are available for your order: https://t.co/kKlxvqrxIu ^MB",
+    "similarity": 0.3282463848590851,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0042",
+    "golden_customer_text": "Amazon delivered my package today opened with a missing item... I never called customer service so fast in all my life.",
+    "golden_human_intent": "item_condition_or_fulfilment",
+    "retrieved_customer_text": "@115821 customer service is a complete disgrace! i have never been so let down in all my life #disgusting",
+    "retrieved_historical_response": "@622543 I'm sorry you are disappointed with the service. Without sharing any personal information can you tell me what the problem was? ^KK",
+    "similarity": 0.2368091195821762,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0043",
+    "golden_customer_text": "@AmazonHelp Two of them went to the wrong address, the third was supposed to come Friday, was marked as delivered, never arrived. I spoke w Amazon Logistics this morning and they said it was out for delivery today but now it\u2019s lost.",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp It was supposed to be delivered yesterday and I called today and customer service said it was supposed to go out for delivery today but wasn't picked up for delivery.",
+    "retrieved_historical_response": "@704501 Which carrier was assigned to deliver the package? You can review this information here: https://t.co/EKXRLsnxJu ^JS",
+    "similarity": 0.28782808780670166,
+    "retrieved_heuristic_intent": "delivery_status_delay"
+  },
+  {
+    "example_id": "golden-set-0045",
+    "golden_customer_text": "@AmazonHelp Package delivered ripped apart with items missing! Ordered replacement, when will it be dispatched? Order 205-3168272-6917947",
+    "golden_human_intent": "item_condition_or_fulfilment",
+    "retrieved_customer_text": "@AmazonHelp i just want to know about my latest order!!! when will it be Dispatched!!!",
+    "retrieved_historical_response": "@241396 I get your concern regarding an order placed. A correspondence email will be sent updating the status of the order and will be delivered by the estimated date. Please keep us posted for any further assistance. ^BS",
+    "similarity": 0.2893761396408081,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0046",
+    "golden_customer_text": "@AmazonHelp hi Amazon! I am a huge fan, I was expecting a package today, app says it has been delivered but I haven\u2019t left home and it is not here, checked mail and nothing, what can I do? :(",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@115830 Hi guys, I was expecting a delivery tokay and according to the tracking, this has been delivered, but I haven't recieved",
+    "retrieved_historical_response": "@572386 I'm sorry you haven't received your parcel! Here are some tips to help you locate your order: https://t.co/07Y97gDkoi ^DG",
+    "similarity": 0.23562665283679962,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0047",
+    "golden_customer_text": "@AmazonHelp Have you ever clicked through the options? There's no \"Delivery Confirmation said it's arrived but it's not here.\" Order 111-9422298-0819411",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp Order #: 111-2104955-8689840",
+    "retrieved_historical_response": "@131675 Hi, we would ask you not post your order number or account details on social media. Just press the link provided by ^DD and send on the details and we will then get back to you.^BZ",
+    "similarity": 0.2919887602329254,
+    "retrieved_heuristic_intent": "other_unclear"
+  },
+  {
+    "example_id": "golden-set-0048",
+    "golden_customer_text": "@AmazonHelp You guys didn't deliver on the day. And when you did deliver, you delivered it to the wrong address. Not bloody bad going if you ask me. But I got a month free of Amazon Prime and I did retrieve my parcel so it was a happy ending.",
+    "golden_human_intent": "other_unclear",
+    "retrieved_customer_text": "@AmazonHelp @115821 how did you guys manage to ship me the wrong item twice ! Pathetic if you ask me",
+    "retrieved_historical_response": "@439301 Sorry the item didn't arrive as expected! Please call us here: https://t.co/hApLpMlfHN, so we can look at avail options. ^JM",
+    "similarity": 0.2332637906074524,
+    "retrieved_heuristic_intent": "item_condition_or_fulfilment"
+  },
+  {
+    "example_id": "golden-set-0049",
+    "golden_customer_text": "Shameful act from @115850, first told my order is delivered and i have signed but not received then says it was error thn delivery was 24 and its 26 no delivery no call, cheating India \ud83c\uddee\ud83c\uddf3 #amazonshame",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@115850 @119356 My order #171-2110587-7601142. Amazon site says, package is delivered and I have signed it. But I did not receive package https://t.co/7SMfhlybkB",
+    "retrieved_historical_response": "@311617 Sorry to know about the ordeal! Please reach us from here: https://t.co/rS49hgaADF we'll assist you. (1/2) ^SV",
+    "similarity": 0.22271579504013062,
+    "retrieved_heuristic_intent": "delivery_marked_delivered_missing"
+  },
+  {
+    "example_id": "golden-set-0050",
+    "golden_customer_text": "@AmazonHelp ANOTHER package incorrectly delivered. I've gotten two packages in a row delivered to the wrong address. I had no issues when UPS and FedEx delivered packages.....",
+    "golden_human_intent": "delivery_marked_delivered_missing",
+    "retrieved_customer_text": "@AmazonHelp My order was delivered to the wrong address.",
+    "retrieved_historical_response": "@249038 Oh no, Shae! That's certainly not what we want for our customers. We'd like to have a member of our team look into this for you. When you have a moment, please provide us with your order details here: https://t.co/s1RbwZVZAm ^NS",
+    "similarity": 0.2858709692955017,
+    "retrieved_heuristic_intent": "delivery_marked_delivered_missing"
+  },
+  {
+    "example_id": "golden-set-0051",
+    "golden_customer_text": "@AmazonHelp Thank you guys so much, the issue has been resolved. A replacement is being sent",
+    "golden_human_intent": "other_unclear",
+    "retrieved_customer_text": "@AmazonHelp The issue has been resolved. Thank You",
+    "retrieved_historical_response": "@735469 Thanks for keeping us posted. Do let us know if there any further concerns. ^GK",
+    "similarity": 0.5112924575805664,
+    "retrieved_heuristic_intent": "other_unclear"
+  }
+]
