@@ -38,7 +38,7 @@ class FastEmbedEmbeddingProvider:
         )
 
     def encode(self, text: str) -> Sequence[float]:
-        result = next(self._model.query_embed(text))
+        result = next(iter(self._model.query_embed(text)))
         return result.tolist()
 
     def encode_many(self, texts: Sequence[str]) -> Sequence[Sequence[float]]:
@@ -69,6 +69,7 @@ class VectorRetriever:
         )
         with self.session_factory() as session:
             rows = session.execute(statement).all()
+        candidate_count = len(rows)
         return [
             {
                 "customer_tweet_id": row.customer_tweet_id,
@@ -76,6 +77,14 @@ class VectorRetriever:
                 "customer_text": row.customer_message,
                 "amazonhelp_response": row.support_response,
                 "similarity": max(0.0, min(1.0, 1.0 - float(distance_value))),
+                "score_components": {
+                    "semantic_similarity": max(
+                        0.0, min(1.0, 1.0 - float(distance_value))
+                    )
+                },
+                "retrieval_backend": "vector",
+                "candidate_count": candidate_count,
+                "candidate_count_scope": "database_top_k_rows_returned",
             }
             for row, distance_value in rows
         ]

@@ -6,7 +6,7 @@ from typing import Any, Literal, Mapping, Sequence
 from uuid import uuid4
 
 DecisionKind = Literal["auto_handle", "escalate"]
-EvidenceStatus = Literal["none", "weak", "sufficient"]
+EvidenceStatus = Literal["none", "weak", "conflicting", "sufficient"]
 
 
 @dataclass(frozen=True)
@@ -93,6 +93,9 @@ class AgentEvidence:
     source_id: str
     retrieval_score: float
     provenance: Mapping[str, str] = field(default_factory=dict)
+    score_components: Mapping[str, float] = field(default_factory=dict)
+    retrieval_backend: str = "unknown"
+    intent_match: bool | None = None
 
 
 @dataclass(frozen=True)

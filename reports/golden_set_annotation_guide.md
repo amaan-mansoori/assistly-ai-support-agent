@@ -29,3 +29,18 @@ Follow actual parent IDs in the supplied context; never infer context from row o
 Use `other_unclear` for a message such as real tweet `969869` (“????”) when context does not establish a goal. Real tweet `423267` mentions a call-centre failure while its response discusses delivery; inspect context rather than forcing keywords. Real tweet `741527` combines missing order confirmation and a missing gift card; choose only if context establishes the primary goal.
 
 For a future annotation, record a concise rationale in `annotation_notes` and keep annotator identity/review history in a separately access-controlled record. No human annotation or agreement result is asserted by this guide.
+
+## Versioned future evaluation annotations
+
+`reports/evaluation/annotation_schema_v1.json` defines a separate annotation
+record for future independently reviewed evaluation. It supports expected
+intent, per-evidence relevance, evidence sufficiency/conflict, expected
+escalation, acceptable-answer criteria, and unsupported-claim categories.
+Use the frozen example ID and evidence IDs; do not edit or replace labels in
+`data/golden/golden_set.csv`.
+
+The schema is a workflow definition, not an annotation dataset. No new human
+annotations, adjudications, or agreement measurements were performed for this
+phase. Keep any annotator identity and any free-text notes outside tracked
+artifacts under access controls; the tracked record schema deliberately stores
+categorical judgments only.

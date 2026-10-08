@@ -17,6 +17,10 @@ def test_retrieve_is_ordered_and_has_provenance():
     assert result[0]["customer_tweet_id"] == "2"
     assert result[0]["response_tweet_id"] == "22"
     assert result[0]["similarity"] >= 0
+    assert result[0]["retrieval_backend"] == "tfidf"
+    assert result[0]["score_components"]["lexical_similarity"] == result[0]["similarity"]
+    assert result[0]["candidate_count"] == 2
+    assert result[0]["candidate_count_scope"] == "full_lexical_corpus_scored"
 
 
 def test_normalize_text():

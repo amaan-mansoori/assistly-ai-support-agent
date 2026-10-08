@@ -54,8 +54,10 @@ def _run_report(*, accuracy=0.8, recall=0.5, run_mode="deterministic_mock"):
         "run_metadata": {
             "dataset_sha256": "frozen-hash",
             "dataset_version": "fixture-v1",
-            "evaluator_version": "integrated-evaluator-v2",
-            "prompt_version": "assistly-support-prompt-v2",
+            "evaluation_schema_version": "assistly-evaluation-schema-v2",
+            "evaluator_version": "integrated-evaluator-v3",
+            "prompt_version": "assistly-support-prompt-v3",
+            "retrieval_version": "assistly-retrieval-v2",
             "retrieval_backend": "tfidf",
             "run_mode": run_mode,
             "provider": "deterministic_mock",
@@ -155,3 +157,22 @@ def test_regression_gate_rejects_provider_or_configuration_mismatch():
     assert result["identity_mismatches"]["configuration"]["different_keys"] == [
         "top_k"
     ]
+
+
+def test_regression_gate_rejects_prompt_or_retrieval_version_mismatch():
+    thresholds = {
+        "metrics": {
+            "accuracy": {
+                "path": "metrics.intent_accuracy",
+                "direction": "higher_is_better",
+                "max_degradation": 0.02,
+            }
+        }
+    }
+    candidate = _run_report()
+    candidate["run_metadata"]["retrieval_version"] = "assistly-retrieval-next"
+
+    result = compare_reports(_run_report(), candidate, thresholds)
+
+    assert result["compatible"] is False
+    assert "retrieval_version" in result["identity_mismatches"]

@@ -17,10 +17,16 @@ class IntentDetector:
         if requested_intent is not None:
             if requested_intent not in INTENT_NAMES:
                 raise ValueError("requested_intent is not in the supported taxonomy")
-        text = " ".join((*conversation_history, message)).strip()
         name = classify_intent(message)
+        source = "regex_taxonomy"
         if name == "other_unclear" and conversation_history:
-            name = classify_intent(text)
+            context_first = " ".join((*conversation_history, message)).strip()
+            context_last = " ".join((message, *reversed(conversation_history))).strip()
+            name = classify_intent(context_first)
+            if name == "other_unclear":
+                name = classify_intent(context_last)
+            if name != "other_unclear":
+                source = "conversation_context_fallback"
         if requested_intent is not None and requested_intent != name:
             return AgentIntent(
                 "other_unclear",
@@ -32,5 +38,5 @@ class IntentDetector:
             name,
             None,
             "Deterministic ordered regex taxonomy; no calibrated confidence is available.",
-            "regex_taxonomy",
+            source,
         )

@@ -366,12 +366,18 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--judgements", type=Path, help="Precomputed judge JSONL; no model calls.")
     parser.add_argument("--live", action="store_true", help="Run the real Gemini judge.")
-    parser.add_argument("--limit", type=int, default=220)
+    parser.add_argument("--limit", type=int)
     parser.add_argument("--summary", type=Path)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     args = parser.parse_args()
+    if args.limit is None:
+        if args.live:
+            parser.error("--live requires --limit between 1 and 20")
+        args.limit = 220
     if args.limit < 1:
         raise SystemExit("--limit must be positive")
+    if args.live and args.limit > 20:
+        parser.error("--live is limited to at most 20 examples")
     manifest, _ = verify_dataset(Path("data/golden/golden_set.csv"), args.manifest)
     records = load_jsonl(args.input)[:args.limit]
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
@@ -404,15 +410,28 @@ def main() -> None:
         ).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         revision = None
+    try:
+        dirty = bool(subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        ).stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        dirty = None
     report["run_metadata"] = {
         "run_id": run_id,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "code_revision": revision,
+        "working_tree_dirty": dirty,
         "dataset_version": manifest["dataset_version"],
         "dataset_sha256": manifest["sha256"],
         "dataset_provenance_status": manifest["provenance_status"],
+        "evaluation_schema_version": "assistly-evaluation-schema-v2",
         "evaluator_version": JUDGE_RUBRIC_VERSION,
         "prompt_version": JUDGE_PROMPT_VERSION,
+        "retrieval_version": "not_applicable_precomputed_judge",
         "provider": report["provider"],
         "model": report["model"],
         "run_mode": "live_judge" if args.live else "deterministic_judge",

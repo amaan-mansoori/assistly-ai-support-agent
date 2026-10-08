@@ -16,8 +16,10 @@ from src.agent.reply_generator import DeterministicMockProvider, configured_llm_
 from src.db.database import make_engine, make_session_factory
 from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
 from src.evaluation.evaluate_integrated_agent import (
+    EVALUATION_SCHEMA_VERSION,
     EVALUATOR_VERSION,
     PROMPT_VERSION,
+    RETRIEVAL_VERSION,
     evaluate_examples,
 )
 from src.evaluation.run_simple_baseline import (
@@ -43,6 +45,20 @@ def _revision() -> str | None:
         return None
 
 
+def _working_tree_dirty() -> bool | None:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        return bool(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def _write_markdown(report: dict, path: Path) -> None:
     sections = [
         "# Assistly Evaluation Comparison",
@@ -53,19 +69,21 @@ def _write_markdown(report: dict, path: Path) -> None:
         f"- Dataset version: `{report['run_metadata']['dataset_version']}`",
         f"- Dataset SHA-256: `{report['run_metadata']['dataset_sha256']}`",
         f"- Examples evaluated: {report['run_metadata']['examples_evaluated']}",
+        f"- Code revision: `{report['run_metadata']['code_revision']}` "
+        f"(working tree dirty: {report['run_metadata']['working_tree_dirty']})",
         "",
         "| System | Run class | Accuracy | Macro-F1 | Same-intent Recall@5 proxy | Groundedness | Unsupported-claim draft rate | Error rate |",
         "|---|---|---:|---:|---:|---:|---:|---:|",
     ]
-    for name in ("majority", "tfidf_logistic_regression", "assistly_runtime"):
-        result = report["results"][name]
+    for system_name in ("majority", "tfidf_logistic_regression", "assistly_runtime"):
+        result = report["results"][system_name]
         metrics = result["metrics"]
         accuracy = metrics.get("intent_accuracy")
         macro_f1 = metrics.get("intent_macro_f1")
         recall5 = metrics.get("retrieval_same_intent_recall_proxy_at_k", {}).get("5")
-        for name, value in (("accuracy", accuracy), ("macro_f1", macro_f1)):
+        for metric_name, value in (("accuracy", accuracy), ("macro_f1", macro_f1)):
             if isinstance(value, dict):
-                if name == "accuracy":
+                if metric_name == "accuracy":
                     accuracy = value.get("value")
                 else:
                     macro_f1 = value.get("value")
@@ -85,7 +103,7 @@ def _write_markdown(report: dict, path: Path) -> None:
             return "not measured" if value is None else f"{value:.4f}"
 
         sections.append(
-            f"| {name} | {result['run_class']} | {fmt(accuracy)} | "
+            f"| {system_name} | {result['run_class']} | {fmt(accuracy)} | "
             f"{fmt(macro_f1)} | {fmt(recall5)} | {fmt(grounded)} | "
             f"{fmt(unsupported)} | {fmt(error_rate)} |"
         )
@@ -110,6 +128,10 @@ def run_comparison(
     mode: str,
     limit: int | None = None,
 ) -> dict:
+    if mode not in {"mock", "live"}:
+        raise ValueError("mode must be 'mock' or 'live'")
+    if mode == "live" and (limit is None or not 1 <= limit <= 20):
+        raise ValueError("live evaluation requires a limit between 1 and 20")
     manifest, all_rows = verify_dataset(dataset, manifest_path)
     rows = all_rows[:limit] if limit else all_rows
     if not rows:
@@ -163,11 +185,14 @@ def run_comparison(
         "run_id": run_id,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "code_revision": _revision(),
+        "working_tree_dirty": _working_tree_dirty(),
         "dataset_version": manifest["dataset_version"],
         "dataset_sha256": manifest["sha256"],
         "dataset_provenance_status": manifest["provenance_status"],
         "evaluator_version": EVALUATOR_VERSION,
+        "evaluation_schema_version": EVALUATION_SCHEMA_VERSION,
         "prompt_version": PROMPT_VERSION,
+        "retrieval_version": RETRIEVAL_VERSION,
         "examples_evaluated": len(rows),
         "retrieval_backend": settings.retriever_backend,
         "run_mode": "deterministic_mock" if mode == "mock" else "live_provider",
@@ -176,6 +201,9 @@ def run_comparison(
         "configuration": {
             "agent": config.__dict__,
             "retrieval_backend": settings.retriever_backend,
+            "embedding_model": settings.embedding_model,
+            "hybrid_lexical_weight": settings.hybrid_lexical_weight,
+            "hybrid_semantic_weight": settings.hybrid_semantic_weight,
             "top_k": config.top_k,
             "minimum_similarity": config.minimum_retrieval_similarity,
             "limit": limit,

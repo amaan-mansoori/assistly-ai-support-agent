@@ -81,6 +81,17 @@ _CLAIM_PATTERNS = (
         ),
     ),
 )
+_SENSITIVE_CREDENTIAL_REQUEST = re.compile(
+    r"\b(?:please\s+)?(?:send|share|provide|tell me|give me|enter|reply with)\s+"
+    r"(?:your\s+)?(?:passwords?|one[- ]time passwords?|otps?|cvvs?|"
+    r"full (?:payment|card) details)\b",
+    re.IGNORECASE,
+)
+_NEGATED_REQUEST = re.compile(
+    r"\b(?:do not|don't|dont|never|should not|shouldn't)\s+"
+    r"(?:please\s+)?(?:send|share|provide|tell me|give me|enter|reply with)\b",
+    re.IGNORECASE,
+)
 
 
 def validate_grounding(
@@ -92,7 +103,7 @@ def validate_grounding(
         raise ValueError("minimum_token_support must be between 0 and 1")
     evidence_rows = [
         {
-            "customer_text": item.customer_message,
+            "customer_text": "",
             "amazonhelp_response": item.support_response,
             "similarity": item.retrieval_score,
         }
@@ -101,9 +112,7 @@ def validate_grounding(
     diagnostic = evaluate_grounding(
         {"draft_reply": draft_reply, "retrieved_examples": evidence_rows}
     )
-    evidence_text = " ".join(
-        f"{item.customer_message} {item.support_response}" for item in evidence
-    ).lower()
+    evidence_text = " ".join(item.support_response for item in evidence).lower()
     unsupported = []
     seen: set[str] = set()
     for label, pattern in _CLAIM_PATTERNS:
@@ -114,6 +123,14 @@ def validate_grounding(
                 if value not in seen:
                     seen.add(value)
                     unsupported.append(value)
+    for match in _SENSITIVE_CREDENTIAL_REQUEST.finditer(draft_reply):
+        statement = draft_reply[max(0, match.start() - 32):match.end()]
+        if _NEGATED_REQUEST.search(statement):
+            continue
+        value = f"unsafe credential request: {match.group(0).strip()}"
+        if value not in seen:
+            seen.add(value)
+            unsupported.append(value)
 
     token_rate = float(diagnostic["evidence_token_support_rate"])
     if not evidence:

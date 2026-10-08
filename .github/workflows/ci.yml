@@ -36,6 +36,8 @@ jobs:
           tests/test_agent_config.py tests/test_agent_context.py
           tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py
           tests/test_evaluation_reporting.py tests/test_phase4_evaluation_controls.py
+          tests/test_phase5_quality.py tests/test_reply_generator.py
+          tests/test_historical_retriever.py
           tests/test_platform_api.py tests/test_platform_foundation.py
           tests/test_rate_limit.py tests/test_retrieval_backends.py
           tests/test_staff_provisioning.py tests/test_retention.py

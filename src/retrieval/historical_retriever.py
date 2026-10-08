@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from scipy.sparse import save_npz
+from scipy.sparse import csr_matrix, save_npz, spmatrix
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -24,9 +24,14 @@ def normalize_text(text: str) -> str:
 class HistoricalRetriever:
     """Small in-memory cosine index for historical customer/brand pairs."""
 
-    def __init__(self, records: list[dict[str, str]], embeddings: np.ndarray, encoder: Any):
+    def __init__(
+        self,
+        records: list[dict[str, str]],
+        embeddings: spmatrix | np.ndarray,
+        encoder: Any,
+    ):
         self.records = records
-        self.embeddings = embeddings.astype(np.float32)
+        self.embeddings: csr_matrix = csr_matrix(embeddings, dtype=np.float32)
         self.encoder = encoder
 
     @classmethod
@@ -86,4 +91,15 @@ class HistoricalRetriever:
         scores = cosine_similarity(vector, self.embeddings)[0]
         # Stable lexical tie-break makes equal-score results reproducible.
         order = sorted(range(len(scores)), key=lambda i: (-float(scores[i]), self.records[i]["customer_tweet_id"]))
-        return [{**self.records[i], "similarity": float(scores[i])} for i in order[:k]]
+        candidate_count = len(order)
+        return [
+            {
+                **self.records[i],
+                "similarity": float(scores[i]),
+                "score_components": {"lexical_similarity": float(scores[i])},
+                "retrieval_backend": "tfidf",
+                "candidate_count": candidate_count,
+                "candidate_count_scope": "full_lexical_corpus_scored",
+            }
+            for i in order[:k]
+        ]

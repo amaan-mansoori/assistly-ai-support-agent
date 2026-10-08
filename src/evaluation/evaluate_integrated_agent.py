@@ -32,8 +32,24 @@ from src.retrieval.historical_retriever import GOLDEN
 PROVENANCE_NOTE = (
     "Provisional: the 220-row labeled evaluation set has unresolved human-label provenance."
 )
-EVALUATOR_VERSION = "integrated-evaluator-v2"
-PROMPT_VERSION = "assistly-support-prompt-v2"
+EVALUATOR_VERSION = "integrated-evaluator-v3"
+PROMPT_VERSION = "assistly-support-prompt-v3"
+RETRIEVAL_VERSION = "assistly-retrieval-v2"
+EVALUATION_SCHEMA_VERSION = "assistly-evaluation-schema-v2"
+FAILURE_CATEGORIES = frozenset({
+    "ambiguous_intent",
+    "wrong_intent",
+    "retrieval_mismatch",
+    "insufficient_evidence",
+    "conflicting_evidence",
+    "unsupported_claim",
+    "unsafe_response",
+    "escalation_error",
+    "context_confusion",
+    "provider_failure",
+    "malformed_provider_output",
+    "prompt_injection",
+})
 
 
 class Agent(Protocol):
@@ -76,19 +92,22 @@ def _failure_category(
     error: str | None,
     grounding_supported: bool | None,
     has_context: bool,
+    unsafe_response: bool = False,
 ) -> str | None:
     if error == "provider_failed":
         return "provider_failure"
     if error == "malformed_model_output":
-        return "provider_failure"
+        return "malformed_provider_output"
     if predicted is None or predicted == "other_unclear":
         return "ambiguous_intent"
-    if predicted != expected and has_context:
-        return "context_confusion"
     if predicted != expected:
-        return "ambiguous_intent"
+        return "context_confusion" if has_context else "wrong_intent"
+    if evidence_status == "conflicting":
+        return "conflicting_evidence"
     if evidence_status == "none" or evidence_status == "weak":
         return "insufficient_evidence"
+    if unsafe_response:
+        return "unsafe_response"
     if grounding_supported is False:
         return "unsupported_claim"
     if decision == "auto_handle" and expected in SENSITIVE_INTENTS:
@@ -110,14 +129,18 @@ def failure_analysis_rows(
         "grounding_supported",
         "failure_category",
     )
-    return [
-        {
+    failures = []
+    for row in rows:
+        category = row.get("failure_category")
+        if category is None:
+            continue
+        if category not in FAILURE_CATEGORIES:
+            raise ValueError(f"unsupported failure category: {category!r}")
+        failures.append({
             **{key: row[key] for key in allowed},
             "evaluator_version": EVALUATOR_VERSION,
-        }
-        for row in rows
-        if row.get("failure_category") is not None
-    ]
+        })
+    return failures
 
 
 def evaluate_examples(
@@ -146,6 +169,11 @@ def evaluate_examples(
     draft_count = 0
     unsupported_draft_count = 0
     grounding_observed_count = 0
+    evidence_assessment_count = 0
+    evidence_conflict_count = 0
+    intent_match_values: list[bool] = []
+    resolution_match_values: list[bool] = []
+    retrieval_backend_counts: dict[str, int] = {}
 
     for example in examples:
         target = example["human_intent"]
@@ -227,7 +255,39 @@ def evaluate_examples(
             response.error,
             is_grounded,
             bool(context),
+            unsafe_response=bool(
+                response.grounding
+                and any(
+                    claim.startswith("unsafe credential request:")
+                    for claim in response.grounding.unsupported_claims
+                )
+            ),
         )
+        retrieval_diagnostics = response.processing_metadata.get(
+            "retrieval_diagnostics", {}
+        )
+        grounding_diagnostics = response.processing_metadata.get(
+            "grounding_diagnostics", {}
+        )
+        if isinstance(retrieval_diagnostics, dict):
+            if "evidence_sufficient" in retrieval_diagnostics:
+                evidence_assessment_count += 1
+                evidence_conflict_count += int(
+                    retrieval_diagnostics.get("evidence_conflict") is True
+                )
+            intent_match = retrieval_diagnostics.get("evidence_intent_match")
+            if isinstance(intent_match, bool):
+                intent_match_values.append(intent_match)
+            resolution_match = retrieval_diagnostics.get(
+                "evidence_resolution_match"
+            )
+            if isinstance(resolution_match, bool):
+                resolution_match_values.append(resolution_match)
+            backend = retrieval_diagnostics.get("retrieval_backend")
+            if isinstance(backend, str):
+                retrieval_backend_counts[backend] = (
+                    retrieval_backend_counts.get(backend, 0) + 1
+                )
         if failure_category is None and not any(matches):
             failure_category = "retrieval_mismatch"
         if failure_category is None and response.intent != target:
@@ -244,10 +304,41 @@ def evaluate_examples(
             "decision": response.decision.decision,
             "evidence_status": response.evidence_status,
             "evidence_source_ids": [item.source_id for item in response.evidence],
+            "retrieval_diagnostics": retrieval_diagnostics,
+            "evidence_sufficient": (
+                retrieval_diagnostics.get("evidence_sufficient")
+                if isinstance(retrieval_diagnostics, dict)
+                else None
+            ),
+            "evidence_conflict": (
+                retrieval_diagnostics.get("evidence_conflict")
+                if isinstance(retrieval_diagnostics, dict)
+                else None
+            ),
+            "evidence_intent_match": (
+                retrieval_diagnostics.get("evidence_intent_match")
+                if isinstance(retrieval_diagnostics, dict)
+                else None
+            ),
+            "evidence_resolution_match": (
+                retrieval_diagnostics.get("evidence_resolution_match")
+                if isinstance(retrieval_diagnostics, dict)
+                else None
+            ),
             "retrieval_intent_hits_at_1_3_5": {
                 str(k): retrieval_hits[k][-1] for k in retrieval_hits
             },
             "grounding_supported": is_grounded,
+            "grounding_status": (
+                grounding_diagnostics.get("grounding_status")
+                if isinstance(grounding_diagnostics, dict)
+                else None
+            ),
+            "unsupported_claim_detected": (
+                grounding_diagnostics.get("unsupported_claim_detected")
+                if isinstance(grounding_diagnostics, dict)
+                else None
+            ),
             "unsupported_claim_count": (
                 len(response.grounding.unsupported_claims)
                 if response.grounding is not None
@@ -319,6 +410,35 @@ def evaluate_examples(
             "status": "not_measured",
             "note": "No independent evidence-sufficiency labels are present.",
         },
+        "evidence_conflict_rate_heuristic": {
+            "value": (
+                evidence_conflict_count / evidence_assessment_count
+                if evidence_assessment_count
+                else None
+            ),
+            "numerator": evidence_conflict_count,
+            "denominator": evidence_assessment_count,
+            "status": "heuristic_policy_signal_not_adjudicated",
+        },
+        "evidence_intent_match_rate_heuristic": {
+            "value": (
+                mean(intent_match_values) if intent_match_values else None
+            ),
+            "numerator": sum(intent_match_values),
+            "denominator": len(intent_match_values),
+            "status": "regex_classification_proxy_not_relevance_ground_truth",
+        },
+        "evidence_resolution_match_rate_heuristic": {
+            "value": (
+                mean(resolution_match_values)
+                if resolution_match_values
+                else None
+            ),
+            "numerator": sum(resolution_match_values),
+            "denominator": len(resolution_match_values),
+            "status": "nonempty_intent_compatible_resolution_proxy",
+        },
+        "retrieval_backend_counts": retrieval_backend_counts,
         "escalation_precision": {
             "value": None,
             "numerator": None,
@@ -387,6 +507,8 @@ def evaluate_examples(
     summary = {
         "evaluation": "integrated_runtime_agent",
         "evaluator_version": EVALUATOR_VERSION,
+        "evaluation_schema_version": EVALUATION_SCHEMA_VERSION,
+        "retrieval_version": RETRIEVAL_VERSION,
         "provenance": PROVENANCE_NOTE,
         "examples_evaluated": examples_count,
         "metrics": metrics,
@@ -426,6 +548,20 @@ def _git_revision() -> str | None:
         return None
 
 
+def _working_tree_dirty() -> bool | None:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        return bool(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def _run_id() -> str:
     return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
 
@@ -438,7 +574,12 @@ def main() -> int:
     parser.add_argument(
         "--mock",
         action="store_true",
-        help="Use a deterministic review-only provider; no live model calls.",
+        help="Use the deterministic review-only provider (the default).",
+    )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Explicitly opt in to a bounded live-provider evaluation.",
     )
     parser.add_argument(
         "--output",
@@ -452,8 +593,12 @@ def main() -> int:
     )
     parser.add_argument("--failures", type=Path, default=None)
     args = parser.parse_args()
+    if args.mock and args.live:
+        parser.error("--mock and --live cannot be combined")
     if args.limit is not None and args.limit < 1:
         parser.error("--limit must be a positive integer")
+    if args.live and (args.limit is None or args.limit > 20):
+        parser.error("--live requires --limit between 1 and 20")
     try:
         manifest, verified_rows = verify_dataset(args.golden, args.manifest)
     except (OSError, KeyError, ValueError, json.JSONDecodeError) as exc:
@@ -461,7 +606,7 @@ def main() -> int:
     examples = verified_rows[:args.limit] if args.limit is not None else verified_rows
     settings = PlatformSettings.from_env()
     config = AgentConfig.load()
-    if args.mock:
+    if not args.live:
         llm_call = DeterministicMockProvider(
             "A support specialist should review this request.",
             grounding_confidence=0.0,
@@ -486,11 +631,11 @@ def main() -> int:
         agent = SupportAgent(retriever, llm_call, config)
         summary, rows = evaluate_examples(agent, examples)
         summary["run_mode"] = (
-            "deterministic_mock" if args.mock else "live_provider"
+            "deterministic_mock" if not args.live else "live_provider"
         )
         summary["provider"] = provider_name
         summary["model"] = model_name
-        if args.mock:
+        if not args.live:
             summary["generation_metrics_note"] = (
                 "This run uses a fixed review-only mock reply; generation "
                 "metrics do not measure a live model."
@@ -507,11 +652,14 @@ def main() -> int:
         "run_id": run_id,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "code_revision": _git_revision(),
+        "working_tree_dirty": _working_tree_dirty(),
         "dataset_version": manifest["dataset_version"],
         "dataset_sha256": manifest["sha256"],
         "dataset_provenance_status": manifest["provenance_status"],
         "evaluator_version": EVALUATOR_VERSION,
         "prompt_version": PROMPT_VERSION,
+        "evaluation_schema_version": EVALUATION_SCHEMA_VERSION,
+        "retrieval_version": RETRIEVAL_VERSION,
         "provider": provider_name,
         "model": model_name,
         "run_mode": summary["run_mode"],

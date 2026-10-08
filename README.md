@@ -125,34 +125,58 @@ feasibility.
 
 The repository now has a single synchronous orchestration entrypoint,
 `SupportAgent.handle(AgentRequest(...))`. It reuses the deterministic
-11-category taxonomy in `src/intents/final_taxonomy_audit.py`, the existing
-TF-IDF historical retriever, structured LLM reply generation, the existing
-escalation policy, and the offline lexical grounding diagnostic. The core
-remains independently callable; the platform wraps it through application
-services rather than moving business logic into API routes.
+11-category taxonomy in `src/intents/final_taxonomy_audit.py`, the
+configuration-selected TF-IDF/vector/hybrid retriever, structured reply
+generation, the existing escalation policy, and the offline lexical grounding
+diagnostic. The core remains independently callable; the platform wraps it
+through application services rather than moving business logic into API routes.
 
 ```text
 Request validation
-  -> intent detection (10 task intents + other_unclear)
-  -> TF-IDF retrieval (top-k historical message/response pairs)
-  -> evidence sufficiency gate
-  -> structured reply generation (Gemini or OpenAI-compatible provider)
+  -> current-turn intent detection (history fallback only when unclear)
+  -> current-turn-first, intent-tagged retrieval query
+  -> configured TF-IDF / optional pgvector / weighted hybrid ranking
+  -> evidence intent/resolution checks and conservative conflict gate
+  -> constrained evidence package (source IDs + historical resolutions only)
+  -> validated structured reply (Gemini or OpenAI-compatible provider)
   -> independent runtime grounding heuristic
   -> conservative escalation policy
   -> structured AgentResponse
 ```
 
 `confidence` from the deterministic intent detector is `None`; no probability
-is fabricated. Retrieved rows do not have trusted intent labels, so runtime
-retrieval is not filtered by intent. The retrieval and grounding floors are
-configurable in `configs/default.yaml` or with the environment variables listed
-above. These are operational heuristics, not calibrated confidence thresholds.
-The grounding gate checks literal claims (including URLs, numbers, timelines,
-policy language, and actions) and lexical overlap; it is not an entailment
-model or proof of truth. Sensitive intents, unclear requests, insufficient
-evidence, unsupported claims, and provider/validation errors fail closed to
-human review. Logs include request correlation and operational fields, not
-customer message text or credentials.
+is fabricated. Retrieved rows do not have trusted intent labels; a local
+taxonomy check is therefore only a retrieval filter/proxy, not a relevance
+label. Current-turn text leads the query, with recent history added only for a
+taxonomy history fallback. Hybrid fusion retains the existing configurable
+lexical/semantic weights (default 0.5/0.5); no new ranking weights are inferred
+from provisional labels. Runtime diagnostics expose backend, fetched candidate
+count, selected evidence IDs, component scores, and heuristic evidence-gate
+signals without logging customer text. Candidate-count scope is reported
+because TF-IDF scores its full local corpus, while pgvector and hybrid expose
+only their fetched top-k candidate sets.
+
+Evidence status distinguishes `none`, `weak`, `conflicting`, and `sufficient`.
+Sufficiency requires a candidate above the configured similarity floor, a
+nonempty support resolution, and (when historical customer text is present) a
+matching deterministic intent. A small lexical outcome/negation check catches
+some obvious conflicts and escalates; it does not prove consistency. The
+`evidence_resolution_match` runtime signal is explicitly a proxy for a
+nonempty, intent-compatible historical resolution, not an independent
+relevance judgment. The provider receives only evidence IDs and resolution
+text; historical customer messages and their embedded instructions are not
+passed as evidence. All user/context/evidence fields remain untrusted data.
+
+The validated provider contract is `reply`, `grounding_status`, `confidence`,
+`escalation_required`, and `evidence_ids`. Legacy field names are normalized
+for compatibility but unknown fields, invalid values, duplicate IDs, and IDs
+not supplied in the evidence package fail closed. Independent grounding still
+checks literal claims (including URLs, numbers, timelines, policy language,
+and actions) and lexical overlap; it is not an entailment model or proof of
+truth. Sensitive intents, unclear requests, weak/conflicting evidence,
+unsupported claims, and provider/validation errors escalate to human review.
+Logs include request correlation and operational fields, not customer message
+text or credentials.
 
 ### Local demo
 
@@ -188,10 +212,11 @@ defaults to Gemini and the model defaults to `gemini-2.0-flash`; use
 use that adapter. `SUPPORT_AGENT_MODEL` overrides the model. The CLI supports
 an alternate YAML file through `--config`.
 
-The TF-IDF retriever and runtime grounding gate are intentionally
-lexical/heuristic at this stage. They are not production-grade factual
-verification. Provider calls require network access and valid credentials;
-normal tests use injected mock providers and do not call external model APIs.
+TF-IDF remains the reproducible baseline; pgvector/CPU FastEmbed semantic
+retrieval is optional. Retrieval conflict and grounding checks are intentionally
+heuristic, not production-grade factual verification or human relevance labels.
+Provider calls require network access and valid credentials; normal tests use
+injected mock providers and do not call external model APIs.
 
 ### Provider boundary and failure behavior
 
@@ -421,7 +446,7 @@ Run offline tests and Python lint checks:
 
 ```powershell
 python -m pytest -q
-ruff check --isolated --select E4,E7,E9,F821 src/agent src/api src/application src/db src/platform src/retrieval src/evaluation/evaluate_integrated_agent.py tests/test_agent_config.py tests/test_agent_context.py tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py tests/test_platform_api.py tests/test_platform_foundation.py tests/test_rate_limit.py tests/test_retrieval_backends.py tests/test_staff_provisioning.py tests/test_retention.py
+ruff check --isolated --select E4,E7,E9,F821 src/agent src/api src/application src/db src/platform src/retrieval src/evaluation/evaluate_integrated_agent.py tests/test_agent_config.py tests/test_agent_context.py tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py tests/test_platform_api.py tests/test_platform_foundation.py tests/test_rate_limit.py tests/test_retrieval_backends.py tests/test_staff_provisioning.py tests/test_retention.py tests/test_phase5_quality.py tests/test_reply_generator.py tests/test_historical_retriever.py
 ```
 
 The tests use fake AI and embedding providers; no paid API key is required.
@@ -443,13 +468,20 @@ corpus and run:
 python -m src.evaluation.evaluate_integrated_agent --mock --limit 10
 ```
 
-The fixed mock asks for human review and makes no model API calls. Its output
-labels the run `deterministic_mock`; generation metrics do not measure a model.
-For a live-provider smoke evaluation, set provider credentials and the model,
-then omit `--mock`; that run can incur cost. Each invocation writes unique
-per-example, summary, and content-minimized failure artifacts under the ignored
-`reports/evaluation/runs/` directory. Dataset hash/schema drift fails closed.
-The frozen dataset fingerprint and caveat are in
+Mock mode is the default, even when `--mock` is omitted. The fixed mock asks
+for human review and makes no model API calls; its generation metrics do not
+measure a model. Live evaluation requires explicit `--live`, an explicit
+`--limit` from 1 through 20, and configured provider credentials:
+
+```powershell
+python -m src.evaluation.evaluate_integrated_agent --live --limit 10
+```
+
+Each invocation writes unique per-example, summary, and content-minimized
+failure artifacts under the ignored `reports/evaluation/runs/` directory.
+Dataset hash/schema drift fails closed. Run metadata includes dataset,
+evaluator, prompt, retrieval, provider/model, mode, configuration, latency,
+and metric versions. Dataset fingerprint and provenance caveat are in
 `reports/evaluation/evaluation_dataset_manifest.json`.
 
 #### Phase 4 experiment protocol
@@ -461,23 +493,29 @@ Logistic Regression baselines and Assistly runtime:
 # Deterministic provider; requires the prepared local corpus and configured local DB.
 python -m src.evaluation.compare_baselines --mode mock
 
-# Explicitly live model run; may incur provider cost and requires credentials.
-python -m src.evaluation.compare_baselines --mode live
+# Explicitly live model run, capped to 20 examples; may incur provider cost.
+python -m src.evaluation.compare_baselines --mode live --limit 10
 ```
 
 The command produces uniquely named JSON and Markdown outputs. Baseline
 definitions are unchanged. Result sections keep deterministic baselines,
 mock/live runtime results, judge results, and human-audit results separate; it
-does not compute an aggregate score that mixes them. `--limit N` is for
-diagnostic subsets only and is recorded in run metadata.
+does not compute an aggregate score that mixes them. `--limit N` is for diagnostic subsets only and is recorded in run metadata.
+Live comparison requires an explicit limit from 1 through 20.
 
 Every integrated run records an evaluation ID, UTC timestamp, available Git
-revision, frozen dataset version/hash/provenance state, evaluator and prompt
-versions, provider/model, retrieval backend, resolved non-secret configuration,
-metric values/denominators, and latency summaries. Token usage and cost are
-`null` unless a provider actually reports them. Failure artifacts contain IDs,
-intent labels, evidence IDs/status, decision, grounding status, failure
-category, and evaluator version—not customer message or reply text.
+revision, frozen dataset version/hash/provenance state, evaluation schema,
+evaluator, prompt, and retrieval versions, provider/model, retrieval backend,
+resolved non-secret configuration, metric values/denominators, and latency
+summaries. Token usage and cost are `null` unless a provider actually reports
+them. Failure artifacts contain IDs, intent labels, evidence IDs/status,
+decision, grounding status, failure category, and evaluator version—not
+customer message, conversation, prompt, draft, or rationale text.
+Categories distinguish ambiguous/wrong intent, retrieval mismatch, insufficient
+or conflicting evidence, unsupported/unsafe output, escalation mistakes,
+context confusion, provider errors, malformed output, and prompt-injection
+handling where an observable failure signal exists. The category is diagnostic,
+not an adjudicated root-cause label.
 
 Metric interpretation:
 
@@ -491,6 +529,9 @@ Metric interpretation:
 - Evidence-sufficiency accuracy and adjudicated escalation precision/recall
   remain `null` without independent labels. A deterministic policy violation
   check is reported separately and is not called adjudicated precision.
+- Evidence conflict, intent-match, and resolution-match rates are labeled
+  heuristic signals with their observed denominators; none are human relevance
+  or sufficiency judgments.
 - Groundedness is the share of returned grounding assessments marked supported.
   Unsupported-claim draft rate is the number of generated drafts with one or
   more unsupported specific claims divided by generated drafts with a grounding
@@ -500,8 +541,33 @@ Metric interpretation:
   internal attempts. Latencies report the count, mean, median, and p95 of
   observed samples for each stage and total.
 
+#### Deterministic evaluation snapshot
+
+The Phase 5 verification run evaluated all 220 examples from
+`assistly-golden-220-v1` (`2a80bd3c...b523b81`, provenance
+`unresolved_provisional`). These results are reproducible pipeline diagnostics
+against provisional labels, not human-ground-truth or live-model quality:
+
+| System | Run class | Accuracy | Macro-F1 | Same-intent Recall@1 / @3 / @5 (proxy) | Groundedness | Unsupported-claim drafts |
+|---|---|---:|---:|---:|---:|---:|
+| Majority baseline | deterministic baseline | 0.2409 (53/220) | 0.0353 | not measured | not measured | not measured |
+| TF-IDF + Logistic Regression | deterministic baseline | 0.4955 (109/220) | 0.5353 | not measured | not measured | not measured |
+| Assistly runtime | deterministic mock | 0.6409 (141/220) | 0.6622 | 0.3136 / 0.4727 / 0.5455 | 0.1000 (9/90) | 0/90 |
+
+Assistly's same-intent MRR proxy was 0.4007 (mean reciprocal rank over 220
+examples). Evidence-sufficiency accuracy and adjudicated escalation
+precision/recall remain unavailable (`null`).
+Mock error and provider-failure rates were 0/220; these do not estimate live
+provider reliability. The deterministic lexical mock judge separately scored
+overall 4.3530/5, with unsupported-claims 4.9455/5; these scores are not
+ground truth, are computed over the judge's configured input artifact rather
+than this runtime run's replies, and are not combined with runtime metrics.
+Machine-specific latency values remain in each ignored run artifact rather
+than being presented as general performance claims.
+
 Regression gates compare only runs with matching dataset hash/version,
-evaluator, prompt, backend, and run mode. Thresholds are maintained in
+evaluation schema, evaluator, prompt, retrieval version, backend, configuration,
+and run mode. Thresholds are maintained in
 `configs/evaluation_regression_thresholds.json`; missing configured metrics or
 incompatible identities fail closed:
 
@@ -516,6 +582,14 @@ Judge artifacts retain categorical reason codes and scores, not chain-of-thought
 Live judge output is distinct from mock and human audit data. Existing human
 audit artifacts may be described only with their original documented scope;
 this workflow does not manufacture new annotations or agreement statistics.
+
+The versioned future annotation contract is
+`reports/evaluation/annotation_schema_v1.json`. It supports expected intent,
+per-evidence relevance, evidence sufficiency/conflict, expected escalation,
+acceptable-answer criteria, and unsupported-claim flags without changing the
+frozen CSV. It is a schema only: no new human annotations or adjudications were
+performed in this phase. Keep annotator identities and free-text notes outside
+tracked artifacts under access controls.
 
 ---
 

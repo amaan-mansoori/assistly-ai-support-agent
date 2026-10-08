@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "assistly-annotation-record-v1",
+  "title": "Assistly independent evaluation annotation",
+  "description": "One future human annotation record. It does not modify or relabel the frozen provisional golden set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "annotation_version",
+    "example_id",
+    "dataset_version",
+    "dataset_sha256",
+    "intent",
+    "evidence_relevance",
+    "evidence_sufficiency",
+    "expected_escalation",
+    "acceptable_answer_criteria",
+    "unsupported_claim_flags",
+    "review_status"
+  ],
+  "properties": {
+    "annotation_version": {
+      "const": "assistly-annotation-record-v1"
+    },
+    "example_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_version": {
+      "const": "assistly-golden-220-v1"
+    },
+    "dataset_sha256": {
+      "const": "2a80bd3cafee26ef8a4cc665b9212a33eae4d08e12a808f9e0cfdce00b523b81"
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "status"
+      ],
+      "properties": {
+        "label": {
+          "enum": [
+            "delivery_status_delay",
+            "delivery_marked_delivered_missing",
+            "return_refund",
+            "item_condition_or_fulfilment",
+            "order_cancellation_or_change",
+            "prime_membership",
+            "account_access_security",
+            "payment_charge_issue",
+            "product_availability_pricing",
+            "marketplace_seller",
+            "other_unclear"
+          ]
+        },
+        "status": {
+          "enum": [
+            "annotated",
+            "uncertain",
+            "not_annotated"
+          ]
+        }
+      }
+    },
+    "evidence_relevance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "label"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "enum": [
+              "relevant",
+              "not_relevant",
+              "uncertain",
+              "not_annotated"
+            ]
+          }
+        }
+      }
+    },
+    "evidence_sufficiency": {
+      "enum": [
+        "sufficient",
+        "insufficient",
+        "conflicting",
+        "uncertain",
+        "not_annotated"
+      ]
+    },
+    "expected_escalation": {
+      "enum": [
+        "escalate",
+        "auto_handle",
+        "uncertain",
+        "not_annotated"
+      ]
+    },
+    "acceptable_answer_criteria": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "addresses_primary_issue",
+          "uses_relevant_evidence",
+          "actionable_next_step",
+          "professional_and_empathetic",
+          "no_unsupported_claims",
+          "protects_sensitive_information",
+          "escalates_when_required"
+        ]
+      }
+    },
+    "unsupported_claim_flags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "policy_or_eligibility",
+          "refund_or_credit",
+          "timeline_or_delivery_date",
+          "account_action",
+          "guarantee",
+          "other"
+        ]
+      }
+    },
+    "review_status": {
+      "enum": [
+        "single_annotator",
+        "independently_reviewed",
+        "adjudicated",
+        "not_reviewed"
+      ]
+    }
+  }
+}

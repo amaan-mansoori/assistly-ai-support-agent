@@ -56,6 +56,7 @@ class HybridRetriever:
                         candidate.setdefault(field, value)
 
         ranked = []
+        candidate_count = len(merged)
         for key, row in merged.items():
             score = (
                 self.lexical_weight * row["lexical_similarity"]
@@ -66,6 +67,15 @@ class HybridRetriever:
                     **row,
                     "similarity": score,
                     "response_tweet_id": row.get("response_tweet_id", key),
+                    "score_components": {
+                        "lexical_similarity": row["lexical_similarity"],
+                        "semantic_similarity": row["semantic_similarity"],
+                        "lexical_weight": self.lexical_weight,
+                        "semantic_weight": self.semantic_weight,
+                    },
+                    "retrieval_backend": "hybrid",
+                    "candidate_count": candidate_count,
+                    "candidate_count_scope": "union_of_component_top_k",
                 }
             )
         ranked.sort(

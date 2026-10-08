@@ -10,8 +10,10 @@ DEFAULT_THRESHOLDS = Path("configs/evaluation_regression_thresholds.json")
 IDENTITY_FIELDS = (
     "dataset_sha256",
     "dataset_version",
+    "evaluation_schema_version",
     "evaluator_version",
     "prompt_version",
+    "retrieval_version",
     "retrieval_backend",
     "run_mode",
     "provider",

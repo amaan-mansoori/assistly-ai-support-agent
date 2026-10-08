@@ -73,6 +73,12 @@ def test_end_to_end_grounded_delivery_draft_can_auto_handle():
     assert result.grounding is not None
     assert result.grounding.supported
     assert result.decision.decision == "auto_handle"
+    assert result.processing_metadata["grounding_diagnostics"][
+        "grounding_status"
+    ] == "supported"
+    assert result.processing_metadata["grounding_diagnostics"][
+        "unsupported_claim_detected"
+    ] is False
     assert result.processing_metadata["duration_ms"] >= 0
     timings = result.processing_metadata["stage_timings_ms"]
     assert {
@@ -89,7 +95,7 @@ def test_end_to_end_grounded_delivery_draft_can_auto_handle():
         result.processing_metadata["provider_retry_count_status"]
         == "provider_sdk_retries_not_exposed"
     )
-    assert retriever.calls[0][0].startswith("My order is late.")
+    assert "current request: My order is late." in retriever.calls[0][0]
 
 
 def test_unclear_intent_escalates_without_retrieval_or_generation():
@@ -136,6 +142,55 @@ def test_weak_retrieval_escalates_under_configured_similarity_floor():
     assert result.evidence_status == "weak"
     assert result.decision.decision == "escalate"
     assert result.draft_reply is None
+
+
+def test_wrong_intent_retrieval_is_not_treated_as_sufficient():
+    wrong_intent = {
+        **EVIDENCE,
+        "customer_text": "My Prime membership renewal was charged.",
+        "similarity": 0.99,
+    }
+    provider_calls = []
+    result = create_agent(
+        StubRetriever(rows=[wrong_intent]),
+        lambda *args: provider_calls.append(args) or reply_json(),
+    ).handle({"message": "My order is late."})
+
+    assert result.evidence_status == "weak"
+    assert result.processing_metadata["retrieval_diagnostics"][
+        "evidence_intent_match"
+    ] is False
+    assert result.decision.decision == "escalate"
+    assert provider_calls == []
+
+
+def test_conflicting_intent_matched_resolutions_escalate_before_provider():
+    rows = [
+        {
+            **EVIDENCE,
+            "customer_text": "My refund is missing after my return.",
+            "amazonhelp_response": "Your refund has been processed.",
+            "similarity": 0.9,
+        },
+        {
+            **EVIDENCE,
+            "customer_text": "My refund is missing after my return.",
+            "amazonhelp_response": "Your refund has not been processed.",
+            "similarity": 0.85,
+        },
+    ]
+    provider_calls = []
+    result = create_agent(
+        StubRetriever(rows=rows),
+        lambda *args: provider_calls.append(args) or reply_json(),
+    ).handle({"message": "My refund is missing after my return."})
+
+    assert result.evidence_status == "conflicting"
+    assert result.processing_metadata["retrieval_diagnostics"][
+        "evidence_conflict"
+    ] is True
+    assert result.decision.decision == "escalate"
+    assert provider_calls == []
 
 
 @pytest.mark.parametrize(
@@ -210,6 +265,25 @@ def test_unsupported_specific_claims_force_human_review(draft):
     assert result.decision.reason.startswith("Independent grounding gate:")
 
 
+def test_unsafe_credential_request_is_grounding_failure_and_escalates():
+    result = create_agent(
+        llm_call=lambda *_: reply_json(
+            draft="Please share your password so I can help."
+        )
+    ).handle({"message": "My order is late."})
+
+    assert result.grounding is not None
+    assert not result.grounding.supported
+    assert any(
+        claim.startswith("unsafe credential request:")
+        for claim in result.grounding.unsupported_claims
+    )
+    assert result.processing_metadata["grounding_diagnostics"][
+        "unsupported_claim_detected"
+    ] is True
+    assert result.decision.decision == "escalate"
+
+
 def test_malformed_model_output_returns_safe_escalation():
     result = create_agent(llm_call=lambda *_: "{bad").handle(
         {"message": "My order is late.", "request_id": "bad-json"}
@@ -270,6 +344,36 @@ def test_conversation_history_is_used_for_intent_retrieval_and_generation():
     assert "My order has been late for two days." in retriever.calls[0][0]
     assert json.dumps(["My order has been late for two days."]) in prompts[0]
     assert result.request_id == "history-2"
+
+
+def test_clear_current_message_dominates_stale_history_in_retrieval_query():
+    retriever = StubRetriever()
+    result = create_agent(retriever).handle(
+        {
+            "message": "The seller won't respond to me.",
+            "conversation_history": [
+                "My order is late and tracking has not updated."
+            ],
+        }
+    )
+
+    assert result.intent == "marketplace_seller"
+    query = retriever.calls[0][0]
+    assert query.index("current request:") < query.index("The seller")
+    assert "recent context:" not in query
+
+
+def test_retrieval_metadata_exposes_scores_without_customer_content():
+    result = create_agent().handle({"message": "My order is late."})
+
+    diagnostics = result.processing_metadata["retrieval_diagnostics"]
+    assert diagnostics["retrieval_backend"] == "unknown"
+    assert diagnostics["candidate_count"] == 1
+    assert diagnostics["selected_evidence_ids"] == ["old-response-1"]
+    assert diagnostics["evidence_sufficient"] is True
+    assert diagnostics["evidence_intent_match"] is True
+    assert diagnostics["evidence_resolution_match"] is True
+    assert "customer_text" not in str(diagnostics)
 
 
 def test_current_sensitive_intent_takes_precedence_over_delivery_history():

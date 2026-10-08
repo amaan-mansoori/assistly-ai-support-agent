@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import cast
+from typing import Any, cast
 
 import numpy as np
 import pytest
@@ -113,6 +113,9 @@ def test_vector_retriever_converts_cosine_distance_to_similarity():
 
     assert result[0]["response_tweet_id"] == "r1"
     assert result[0]["similarity"] == 0.75
+    assert result[0]["retrieval_backend"] == "vector"
+    assert result[0]["score_components"]["semantic_similarity"] == 0.75
+    assert result[0]["candidate_count_scope"] == "database_top_k_rows_returned"
     with pytest.raises(ValueError, match="at least 1"):
         retriever.retrieve("query", k=0)
 
@@ -148,7 +151,8 @@ def test_hybrid_retriever_merges_deduplicates_and_ranks_weighted_scores():
         def __init__(self, rows):
             self.rows = rows
 
-        def retrieve(self, _query, k=5):
+        def retrieve(self, query: str, k: int = 5) -> list[dict[str, Any]]:
+            del query
             return self.rows[:k]
 
     retriever = HybridRetriever(
@@ -184,6 +188,14 @@ def test_hybrid_retriever_merges_deduplicates_and_ranks_weighted_scores():
     assert results[0]["similarity"] == pytest.approx(0.825)
     assert results[0]["lexical_similarity"] == 0.6
     assert results[0]["semantic_similarity"] == 0.9
+    assert results[0]["retrieval_backend"] == "hybrid"
+    assert results[0]["score_components"] == {
+        "lexical_similarity": 0.6,
+        "semantic_similarity": 0.9,
+        "lexical_weight": 0.25,
+        "semantic_weight": 0.75,
+    }
+    assert results[0]["candidate_count_scope"] == "union_of_component_top_k"
 
 
 def test_hybrid_retriever_handles_empty_results_and_rejects_bad_scores():
@@ -191,7 +203,8 @@ def test_hybrid_retriever_handles_empty_results_and_rejects_bad_scores():
         def __init__(self, rows):
             self.rows = rows
 
-        def retrieve(self, _query, k=5):
+        def retrieve(self, query: str, k: int = 5) -> list[dict[str, Any]]:
+            del query
             return self.rows[:k]
 
     empty = HybridRetriever(StubRetriever([]), StubRetriever([]))
@@ -274,7 +287,7 @@ def test_hybrid_factory_wires_configured_backends(monkeypatch):
         hybrid_semantic_weight=0.7,
     )
 
-    result = retriever_factory.build_retriever(settings, None)
+    result = retriever_factory.build_retriever(settings, sessionmaker())
 
     assert isinstance(result, HybridRetriever)
     assert result.lexical is lexical
