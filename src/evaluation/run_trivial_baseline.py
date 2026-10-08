@@ -5,9 +5,11 @@ import csv
 import json
 from collections import Counter
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable, cast
 
+from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, f1_score, precision_recall_fscore_support
+from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
 
 GOLDEN_SET = Path("data/golden/golden_set.csv")
 JSON_REPORT = Path("reports/evaluation/trivial_baseline.json")
@@ -29,7 +31,7 @@ ALLOWED_LABELS = (
 
 
 def load_labels(path: Path = GOLDEN_SET) -> list[str]:
-    """Load and validate the human-reviewed labels."""
+    """Load and validate the provisional evaluation labels."""
     with path.open("r", encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     if len(rows) != EXPECTED_ROWS:
@@ -57,14 +59,20 @@ def evaluate(labels: list[str]) -> dict[str, object]:
     label, count = majority_class(labels)
     predictions = [label] * len(labels)
     precision, recall, f1, support = precision_recall_fscore_support(
-        labels, predictions, labels=list(ALLOWED_LABELS), zero_division=0
+        labels, predictions, labels=list(ALLOWED_LABELS), average=None, zero_division=0
     )
-    per_intent = {
+    if support is None:
+        raise RuntimeError("per-intent metrics did not return class-level values")
+    precision_values = cast(NDArray[Any], precision)
+    recall_values = cast(NDArray[Any], recall)
+    f1_values = cast(NDArray[Any], f1)
+    support_values = cast(NDArray[Any], support)
+    per_intent: dict[str, dict[str, float | int]] = {
         intent: {
-            "precision": float(precision[index]),
-            "recall": float(recall[index]),
-            "f1": float(f1[index]),
-            "support": int(support[index]),
+            "precision": float(precision_values[index]),
+            "recall": float(recall_values[index]),
+            "f1": float(f1_values[index]),
+            "support": int(support_values[index]),
         }
         for index, intent in enumerate(ALLOWED_LABELS)
     }
@@ -86,6 +94,8 @@ def write_reports(metrics: dict[str, object], json_path: Path = JSON_REPORT,
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     per_intent = metrics["per_intent"]
+    if not isinstance(per_intent, dict):
+        raise TypeError("majority baseline per_intent metrics must be an object")
     lines = [
         "# Trivial Majority-Class Baseline",
         "",
@@ -114,7 +124,8 @@ def write_reports(metrics: dict[str, object], json_path: Path = JSON_REPORT,
 
 
 def main() -> None:
-    labels = load_labels()
+    _, rows = verify_dataset(GOLDEN_SET, DEFAULT_MANIFEST)
+    labels = [row["human_intent"] for row in rows]
     metrics = evaluate(labels)
     write_reports(metrics)
     print(json.dumps(metrics, indent=2))

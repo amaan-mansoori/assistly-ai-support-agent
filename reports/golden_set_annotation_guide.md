@@ -1,6 +1,6 @@
 # Golden-Set Annotation Guide
 
-This guide is for **human** annotation. Regex and cluster outputs are sampling aids, not ground truth. Read the customer inquiry with available preceding turns and the AmazonHelp response, but label the customer's primary support goal.
+This guide is intended for a future traceable human annotation pass. Regex and cluster outputs are sampling aids, not ground truth. Read the customer inquiry with available preceding turns and the AmazonHelp response, but label the customer's primary support goal. The checked-in golden-set labels currently have unresolved provenance and must not be treated as human ground truth.
 
 ## Labels and criteria
 
@@ -28,4 +28,4 @@ Follow actual parent IDs in the supplied context; never infer context from row o
 
 Use `other_unclear` for a message such as real tweet `969869` (“????”) when context does not establish a goal. Real tweet `423267` mentions a call-centre failure while its response discusses delivery; inspect context rather than forcing keywords. Real tweet `741527` combines missing order confirmation and a missing gift card; choose only if context establishes the primary goal.
 
-Record rationale in `annotation_notes`. The final golden set is HAND-LABELLED by a human; local methods may assist sampling only.
+For a future annotation, record a concise rationale in `annotation_notes` and keep annotator identity/review history in a separately access-controlled record. No human annotation or agreement result is asserted by this guide.

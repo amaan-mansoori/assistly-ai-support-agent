@@ -436,7 +436,7 @@ are not used. NLTK and evaluation-only packages are excluded from the backend
 runtime image. Revisit the exception when an upstream fix is available.
 
 Historical component benchmarks below remain distinct from the integrated
-runtime harness. To run an offline deterministic smoke evaluation, prepare the
+runtime harness. To run an offline deterministic evaluation, prepare the local
 corpus and run:
 
 ```powershell
@@ -446,14 +446,76 @@ python -m src.evaluation.evaluate_integrated_agent --mock --limit 10
 The fixed mock asks for human review and makes no model API calls. Its output
 labels the run `deterministic_mock`; generation metrics do not measure a model.
 For a live-provider smoke evaluation, set provider credentials and the model,
-then omit `--mock`; that run can incur cost. Each invocation writes per-example
-runs and a separate summary under `reports/evaluation/`. Metrics include intent
-accuracy and macro-F1, top-k retrieval heuristic-intent recall/MRR, runtime
-groundedness, explicitly unavailable unsupported-claim/evidence-sufficiency
-rates where valid labels are absent, policy-safety proxies, latency, and error
-rate. Results are provisional because the 220-row labeled set's human
-annotation provenance remains unresolved. Retrieval relevance and policy
-precision/recall values are proxies, not independent human adjudications.
+then omit `--mock`; that run can incur cost. Each invocation writes unique
+per-example, summary, and content-minimized failure artifacts under the ignored
+`reports/evaluation/runs/` directory. Dataset hash/schema drift fails closed.
+The frozen dataset fingerprint and caveat are in
+`reports/evaluation/evaluation_dataset_manifest.json`.
+
+#### Phase 4 experiment protocol
+
+Run the same frozen dataset through the unchanged majority and TF-IDF +
+Logistic Regression baselines and Assistly runtime:
+
+```powershell
+# Deterministic provider; requires the prepared local corpus and configured local DB.
+python -m src.evaluation.compare_baselines --mode mock
+
+# Explicitly live model run; may incur provider cost and requires credentials.
+python -m src.evaluation.compare_baselines --mode live
+```
+
+The command produces uniquely named JSON and Markdown outputs. Baseline
+definitions are unchanged. Result sections keep deterministic baselines,
+mock/live runtime results, judge results, and human-audit results separate; it
+does not compute an aggregate score that mixes them. `--limit N` is for
+diagnostic subsets only and is recorded in run metadata.
+
+Every integrated run records an evaluation ID, UTC timestamp, available Git
+revision, frozen dataset version/hash/provenance state, evaluator and prompt
+versions, provider/model, retrieval backend, resolved non-secret configuration,
+metric values/denominators, and latency summaries. Token usage and cost are
+`null` unless a provider actually reports them. Failure artifacts contain IDs,
+intent labels, evidence IDs/status, decision, grounding status, failure
+category, and evaluator version—not customer message or reply text.
+
+Metric interpretation:
+
+- Intent accuracy is exact matches / evaluated examples. Macro-F1 averages the
+  per-class F1 for target and predicted labels. Both remain provisional because
+  label provenance is unresolved.
+- Same-intent retrieval Recall@1/3/5 and MRR are **heuristic proxies**: retrieved
+  historical messages are assigned intent by the existing local taxonomy.
+  They are not independent relevance judgments. Real retrieval relevance
+  Recall@K/MRR are not measured until a relevance set is independently labeled.
+- Evidence-sufficiency accuracy and adjudicated escalation precision/recall
+  remain `null` without independent labels. A deterministic policy violation
+  check is reported separately and is not called adjudicated precision.
+- Groundedness is the share of returned grounding assessments marked supported.
+  Unsupported-claim draft rate is the number of generated drafts with one or
+  more unsupported specific claims divided by generated drafts with a grounding
+  result. The lexical grounding checker is a diagnostic, not factual truth.
+- Error/provider-failure rates use all evaluated examples as denominator;
+  provider retry count remains unavailable when the SDK does not expose actual
+  internal attempts. Latencies report the count, mean, median, and p95 of
+  observed samples for each stage and total.
+
+Regression gates compare only runs with matching dataset hash/version,
+evaluator, prompt, backend, and run mode. Thresholds are maintained in
+`configs/evaluation_regression_thresholds.json`; missing configured metrics or
+incompatible identities fail closed:
+
+```powershell
+python -m src.evaluation.regression_gate --baseline path\to\baseline.json --candidate path\to\candidate.json
+```
+
+CI exercises the gate with deterministic fixtures only and does not need
+provider credentials. Judge rubric/prompt versions are recorded separately;
+the deterministic mock judge is a lexical diagnostic, never ground truth.
+Judge artifacts retain categorical reason codes and scores, not chain-of-thought.
+Live judge output is distinct from mock and human audit data. Existing human
+audit artifacts may be described only with their original documented scope;
+this workflow does not manufacture new annotations or agreement statistics.
 
 ---
 
@@ -543,9 +605,7 @@ Required environment variable:
 
 ```powershell
 $env:SUPPORT_AGENT_MODEL="gemini-3.1-flash-lite"
-python -m src.evaluation.llm_judge --live --limit 220 `
-  --output reports/evaluation/reply_judge_gemini.jsonl `
-  --summary reports/evaluation/reply_judge_gemini_summary.json
+python -m src.evaluation.llm_judge --live --limit 220
 ```
 
 This step makes 220 live judge calls. It depends on external API access, rate

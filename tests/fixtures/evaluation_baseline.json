@@ -1,0 +1,23 @@
+{
+  "run_metadata": {
+    "dataset_sha256": "fixture-dataset-sha256",
+    "dataset_version": "fixture-v1",
+    "evaluator_version": "integrated-evaluator-v2",
+    "prompt_version": "assistly-support-prompt-v2",
+    "retrieval_backend": "tfidf",
+    "run_mode": "deterministic_mock",
+    "provider": "deterministic_mock",
+    "model": null,
+    "examples_evaluated": 10,
+    "configuration": {"limit": 10}
+  },
+  "metrics": {
+    "intent_accuracy": {"value": 0.8},
+    "intent_macro_f1": {"value": 0.75},
+    "retrieval_same_intent_recall_proxy_at_k": {
+      "5": {"value": 0.7}
+    },
+    "unsupported_claim_rate": {"value": 0.15},
+    "error_rate": {"value": 0.02}
+  }
+}

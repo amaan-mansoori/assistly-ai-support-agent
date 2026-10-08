@@ -1,0 +1,30 @@
+{
+  "threshold_version": "assistly-quality-gates-v1",
+  "metrics": {
+    "intent_accuracy": {
+      "path": "metrics.intent_accuracy",
+      "direction": "higher_is_better",
+      "max_degradation": 0.03
+    },
+    "intent_macro_f1": {
+      "path": "metrics.intent_macro_f1",
+      "direction": "higher_is_better",
+      "max_degradation": 0.03
+    },
+    "same_intent_recall_at_5_proxy": {
+      "path": "metrics.retrieval_same_intent_recall_proxy_at_k.5",
+      "direction": "higher_is_better",
+      "max_degradation": 0.05
+    },
+    "unsupported_claim_rate": {
+      "path": "metrics.unsupported_claim_rate",
+      "direction": "lower_is_better",
+      "max_degradation": 0.02
+    },
+    "error_rate": {
+      "path": "metrics.error_rate",
+      "direction": "lower_is_better",
+      "max_degradation": 0.01
+    }
+  }
+}

@@ -30,11 +30,20 @@ jobs:
           ruff check --isolated --select E4,E7,E9,F821
           src/agent src/api src/application src/db src/platform src/retrieval
           src/evaluation/evaluate_integrated_agent.py
+          src/evaluation/dataset_manifest.py src/evaluation/regression_gate.py
+          src/evaluation/compare_baselines.py src/evaluation/llm_judge.py
+          src/evaluation/run_simple_baseline.py src/evaluation/run_trivial_baseline.py
           tests/test_agent_config.py tests/test_agent_context.py
           tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py
+          tests/test_evaluation_reporting.py tests/test_phase4_evaluation_controls.py
           tests/test_platform_api.py tests/test_platform_foundation.py
           tests/test_rate_limit.py tests/test_retrieval_backends.py
           tests/test_staff_provisioning.py tests/test_retention.py
+      - run: >-
+          python -m src.evaluation.regression_gate
+          --baseline tests/fixtures/evaluation_baseline.json
+          --candidate tests/fixtures/evaluation_candidate.json
+          --thresholds configs/evaluation_regression_thresholds.json
       - run: python -m alembic upgrade head
         env:
           APP_ENV: test

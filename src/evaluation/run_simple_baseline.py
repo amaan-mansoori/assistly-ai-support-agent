@@ -6,8 +6,9 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
+from numpy.typing import NDArray
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -20,6 +21,7 @@ from sklearn.metrics import (
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
 from src.intents.final_taxonomy_audit import classify_intent
 from src.intents.refine_taxonomy import clean_customer_text, detect_language
 
@@ -105,11 +107,21 @@ def evaluate(
     predictions = model.predict(vectorizer.transform([row["customer_text"] for row in evaluation_rows])).tolist()
     truth = [row["human_intent"] for row in evaluation_rows]
     precision, recall, f1, support = precision_recall_fscore_support(
-        truth, predictions, labels=list(ALLOWED_LABELS), zero_division=0
+        truth, predictions, labels=list(ALLOWED_LABELS), average=None, zero_division=0
     )
-    per_intent = {
-        intent: {"precision": float(precision[i]), "recall": float(recall[i]),
-                 "f1": float(f1[i]), "support": int(support[i])}
+    if support is None:
+        raise RuntimeError("per-intent metrics did not return class-level values")
+    precision_values = cast(NDArray[Any], precision)
+    recall_values = cast(NDArray[Any], recall)
+    f1_values = cast(NDArray[Any], f1)
+    support_values = cast(NDArray[Any], support)
+    per_intent: dict[str, dict[str, float | int]] = {
+        intent: {
+            "precision": float(precision_values[i]),
+            "recall": float(recall_values[i]),
+            "f1": float(f1_values[i]),
+            "support": int(support_values[i]),
+        }
         for i, intent in enumerate(ALLOWED_LABELS)
     }
     matrix = confusion_matrix(truth, predictions, labels=list(ALLOWED_LABELS)).tolist()
@@ -161,7 +173,7 @@ def write_reports(metrics: dict[str, Any], filtered: dict[str, int],
 
 
 def main() -> None:
-    evaluation_rows = load_evaluation_rows()
+    _, evaluation_rows = verify_dataset(GOLDEN_SET, DEFAULT_MANIFEST)
     training_texts, training_labels, filtered = load_training_rows(evaluation_rows=evaluation_rows)
     metrics, _ = evaluate(training_texts, training_labels, evaluation_rows)
     write_reports(metrics, filtered)

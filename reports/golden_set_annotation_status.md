@@ -1,13 +1,13 @@
 # Golden Set Annotation Status
 
-## Selection
+## Historical selection and current label provenance
 
 - **220 selected** from `data/golden/golden_candidates.csv`.
 - Deterministic method: existing SHA-256 ordering with seed **42**, selecting the requested quota independently within each `candidate_stratum`.
 - `candidate_stratum` is **NOT ground truth**. It is only a sampling stratum.
-- Every `human_intent` and `annotation_notes` cell is blank. Final labels must be assigned by a human annotator; no labels were generated automatically.
+- This status file describes the original empty worksheet state, but the checked-in `golden_set.csv` now contains populated labels. Other repository evidence describes labels as AI-proposed. These artifacts conflict; the current label provenance is **unresolved** and no human ground truth is asserted.
 
-## Target and actual counts
+## Original candidate-stratum sampling quotas (not verified intent labels)
 
 - `delivery_status_delay`: target **25**, actual **25**
 - `delivery_marked_delivered_missing`: target **25**, actual **25**
@@ -28,4 +28,4 @@
 
 Flagged worksheet rows (not removed or relabelled):
 - `golden-set-0121`: CJK characters
-The worksheet is blank and annotation-ready; do not treat candidate strata as human decisions.
+Do not infer that the current CSV is blank, human-labelled, or annotation-ready from this historical status record. Current evaluation must use the frozen file fingerprint and treat its populated labels as provisional until a traceable review record resolves provenance.

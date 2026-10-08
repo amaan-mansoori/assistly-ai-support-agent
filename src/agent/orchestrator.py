@@ -93,6 +93,19 @@ class SupportAgent:
                 **result.processing_metadata,
                 "duration_ms": duration_ms,
                 "stage_timings_ms": stage_timings,
+                "provider_retry_count": None,
+                "provider_retry_count_status": "provider_sdk_retries_not_exposed",
+                "configured_provider_max_retries": self.config.provider_max_retries,
+                "provider_error_category": (
+                    result.processing_metadata.get("provider_error_category")
+                    or (
+                        "malformed_response"
+                        if result.error == "malformed_model_output"
+                        else "provider_error"
+                        if result.error == "provider_failed"
+                        else None
+                    )
+                ),
             },
         )
         logger.info(
@@ -179,9 +192,15 @@ class SupportAgent:
                 (time.perf_counter() - phase_started) * 1000, 3
             )
 
-        assessment = assess_evidence(
-            evidence, self.config.minimum_retrieval_similarity
-        )
+        phase_started = time.perf_counter()
+        try:
+            assessment = assess_evidence(
+                evidence, self.config.minimum_retrieval_similarity
+            )
+        finally:
+            stage_timings["evidence_gate_latency_ms"] = round(
+                (time.perf_counter() - phase_started) * 1000, 3
+            )
         if intent.name in SENSITIVE_INTENTS:
             return self._escalated(
                 request.request_id,
@@ -204,6 +223,16 @@ class SupportAgent:
             )
 
         phase_started = time.perf_counter()
+
+        def measured_provider_call(system: str, user: str) -> str:
+            provider_started = time.perf_counter()
+            try:
+                return self.llm_call(system, user)
+            finally:
+                stage_timings["provider_call_latency_ms"] = round(
+                    (time.perf_counter() - provider_started) * 1000, 3
+                )
+
         try:
             retrieved_rows = [
                 {
@@ -219,11 +248,11 @@ class SupportAgent:
                 message,
                 intent.name,
                 retrieved_rows,
-                self.llm_call,
+                measured_provider_call,
                 conversation_history=history,
             )
         except ReplyGenerationError:
-            return self._failed(
+            failed = self._failed(
                 request.request_id,
                 "malformed_model_output",
                 "The response provider returned an invalid draft; human review is required.",
@@ -232,8 +261,11 @@ class SupportAgent:
                 evidence_status=assessment.status,
                 evidence_reason=assessment.reason,
             )
-        except Exception:
-            return self._failed(
+            return replace(
+                failed, processing_metadata={"provider_error_category": "malformed_response"}
+            )
+        except Exception as exc:
+            failed = self._failed(
                 request.request_id,
                 "provider_failed",
                 "The response provider failed; human review is required.",
@@ -241,6 +273,12 @@ class SupportAgent:
                 evidence=assessment.evidence,
                 evidence_status=assessment.status,
                 evidence_reason=assessment.reason,
+            )
+            return replace(
+                failed,
+                processing_metadata={
+                    "provider_error_category": _provider_error_category(exc)
+                },
             )
         finally:
             stage_timings["generation_latency_ms"] = round(
@@ -370,3 +408,14 @@ def _request_id(value: AgentRequest | Mapping[str, Any]) -> str:
     ):
         return candidate
     return str(uuid4())
+
+
+def _provider_error_category(error: Exception) -> str:
+    status = getattr(error, "status_code", None)
+    if status == 429:
+        return "rate_limited"
+    if isinstance(status, int) and status >= 500:
+        return "provider_server_error"
+    if isinstance(error, TimeoutError) or "timeout" in type(error).__name__.lower():
+        return "provider_timeout"
+    return "provider_error"

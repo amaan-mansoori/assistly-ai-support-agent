@@ -55,6 +55,9 @@ frontend/tsconfig.tsbuildinfo
 # Local platform data
 *.db
 
+# Per-run evaluation reports are local outputs; retain curated historical reports.
+reports/evaluation/runs/
+
 # Distribution
 *.whl
 *.tar.gz

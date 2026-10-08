@@ -57,12 +57,25 @@ def test_injected_structured_judge_is_used_without_live_call():
     def fake_judge(record):
         calls.append(record["example_id"])
         return {"scores": {dimension: 4 for dimension in (
-            "relevance", "helpfulness", "factuality", "grounding", "safety"
-        )}, "rationale": "fixed"}
+            "relevance", "helpfulness", "correctness", "groundedness",
+            "unsupported_claims", "safety"
+        )}, "reason_category": "supported", "rationale": "must not persist"}
 
     report = judge_records([_record()], StructuredJudgeDriver(fake_judge))
     assert calls == ["one"]
     assert report["mean_scores"]["overall"] == 4
+    assert "rationale" not in report["per_example"][0]
+    assert report["judge_version"] == "assistly-judge-rubric-v2"
+
+
+def test_mock_judge_scores_unsupported_claims_explicitly():
+    from src.evaluation.llm_judge import DeterministicJudgeDriver
+
+    judgement = DeterministicJudgeDriver().judge(
+        _record(draft="Your order arrives on 2026-09-14.")
+    )
+    assert judgement["scores"]["unsupported_claims"] == 1
+    assert judgement["reason_category"] == "unsupported_specific_claim"
 
 
 def test_judge_rejects_missing_or_out_of_range_scores():
@@ -150,7 +163,10 @@ def test_final_report_includes_human_audit_summary(tmp_path: Path):
 
 def test_gemini_judge_uses_prompt_inputs_and_schema(monkeypatch):
     calls = {}
-    dimensions = ("relevance", "helpfulness", "factuality", "grounding", "safety")
+    dimensions = (
+        "relevance", "helpfulness", "correctness", "groundedness",
+        "unsupported_claims", "safety",
+    )
 
     class FakeModels:
         def generate_content(self, **kwargs):
@@ -158,18 +174,21 @@ def test_gemini_judge_uses_prompt_inputs_and_schema(monkeypatch):
             return type("Response", (), {
                 "text": json.dumps({
                     "scores": {dimension: 4 for dimension in dimensions},
-                    "rationale": "grounded",
+                    "reason_category": "supported",
                 })
             })()
 
     class FakeClient:
-        def __init__(self, api_key):
+        def __init__(self, api_key, http_options):
             assert api_key == "test-key"
+            assert http_options["timeout"] == 30000
             self.models = FakeModels()
 
     fake_types = type("Types", (), {
         "GenerateContentConfig": staticmethod(lambda **kwargs: kwargs),
         "AutomaticFunctionCallingConfig": staticmethod(lambda **kwargs: kwargs),
+        "HttpOptions": staticmethod(lambda **kwargs: kwargs),
+        "HttpRetryOptions": staticmethod(lambda **kwargs: kwargs),
         "Type": type("Type", (), {
             "OBJECT": "OBJECT", "INTEGER": "INTEGER", "STRING": "STRING"
         }),
@@ -190,7 +209,8 @@ def test_gemini_judge_uses_prompt_inputs_and_schema(monkeypatch):
     schema = calls["config"]["response_schema"]
     assert schema["type"] == "OBJECT"
     assert schema["properties"]["scores"]["type"] == "OBJECT"
-    assert schema["properties"]["scores"]["properties"]["grounding"]["type"] == "INTEGER"
+    assert schema["properties"]["scores"]["properties"]["groundedness"]["type"] == "INTEGER"
+    assert schema["properties"]["scores"]["properties"]["unsupported_claims"]["type"] == "INTEGER"
     assert "additional_properties" not in schema
     assert "additionalProperties" not in schema
     assert calls["config"]["automatic_function_calling"]["disable"] is True
@@ -198,11 +218,14 @@ def test_gemini_judge_uses_prompt_inputs_and_schema(monkeypatch):
 
 def test_live_judge_preserves_checkpoint_and_retries(tmp_path: Path):
     output = tmp_path / "judge.jsonl"
-    dimensions = ("relevance", "helpfulness", "factuality", "grounding", "safety")
+    dimensions = (
+        "relevance", "helpfulness", "correctness", "groundedness",
+        "unsupported_claims", "safety",
+    )
     existing = {
         "example_id": "one",
         "scores": {dimension: 4 for dimension in dimensions},
-        "rationale": "done",
+        "reason_category": "supported",
     }
     output.write_text(json.dumps(existing) + "\n", encoding="utf-8")
     calls = []
@@ -212,11 +235,16 @@ def test_live_judge_preserves_checkpoint_and_retries(tmp_path: Path):
             calls.append(record["example_id"])
             if len(calls) == 1:
                 raise TimeoutError("temporary")
-            return {"scores": {dimension: 5 for dimension in dimensions}, "rationale": "done"}
+            return {
+                "scores": {dimension: 5 for dimension in dimensions},
+                "reason_category": "supported",
+            }
 
     report = run_live_judge([_record("one"), _record("two")], Driver(), output,
                             sleep_fn=lambda _: None)
     assert calls == ["two", "two"]
     assert set(load_judge_checkpoint(output)) == {"one", "two"}
     assert report["examples_evaluated"] == 2
-    assert "Generated reply:" in build_judge_prompt(_record())
+    prompt = build_judge_prompt(_record())
+    assert "generated_reply_untrusted" in prompt
+    assert "Do not reveal chain-of-thought" in prompt

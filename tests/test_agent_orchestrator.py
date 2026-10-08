@@ -78,10 +78,17 @@ def test_end_to_end_grounded_delivery_draft_can_auto_handle():
     assert {
         "intent_detection_latency_ms",
         "retrieval_latency_ms",
+        "evidence_gate_latency_ms",
         "generation_latency_ms",
+        "provider_call_latency_ms",
         "grounding_latency_ms",
     } <= timings.keys()
     assert all(value >= 0 for value in timings.values())
+    assert result.processing_metadata["provider_retry_count"] is None
+    assert (
+        result.processing_metadata["provider_retry_count_status"]
+        == "provider_sdk_retries_not_exposed"
+    )
     assert retriever.calls[0][0].startswith("My order is late.")
 
 
@@ -314,6 +321,28 @@ def test_provider_timeout_fails_safely_without_exposing_exception():
     assert result.decision.decision == "escalate"
     assert result.draft_reply is None
     assert "secret details" not in result.decision.reason
+    assert result.processing_metadata["provider_error_category"] == "provider_timeout"
+
+
+@pytest.mark.parametrize(
+    ("error", "category"),
+    [
+        (TimeoutError("provider secret timeout"), "provider_timeout"),
+        (type("RateLimitError", (Exception,), {"status_code": 429})("secret"), "rate_limited"),
+        (type("ServerError", (Exception,), {"status_code": 503})("secret"), "provider_server_error"),
+    ],
+)
+def test_provider_error_categories_are_sanitized_and_fail_closed(error, category):
+    def fail(*_args):
+        raise error
+
+    result = create_agent(llm_call=fail).handle({"message": "My order is late."})
+
+    assert result.error == "provider_failed"
+    assert result.decision.decision == "escalate"
+    assert result.draft_reply is None
+    assert result.processing_metadata["provider_error_category"] == category
+    assert "secret" not in result.decision.reason
 
 
 def test_classifier_failure_fails_safely():
