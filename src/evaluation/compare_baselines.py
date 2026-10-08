@@ -176,7 +176,7 @@ def run_comparison(
         runtime = SupportAgent(
             build_retriever(settings, session_factory), provider, config
         )
-        runtime_summary, _ = evaluate_examples(runtime, rows)
+        runtime_summary, runtime_rows = evaluate_examples(runtime, rows)
     finally:
         engine.dispose()
 
@@ -226,6 +226,10 @@ def run_comparison(
             "majority": {
                 "run_class": "deterministic_baseline",
                 "algorithm": "constant majority label, deterministic lexicographic tie-break",
+                "per_example": [
+                    {"example_id": row["example_id"], "predicted_intent": prediction}
+                    for row, prediction in zip(rows, majority_predictions)
+                ],
                 "metrics": {
                     "intent_accuracy": {
                         "value": majority_metrics["accuracy"],
@@ -249,6 +253,10 @@ def run_comparison(
             "tfidf_logistic_regression": {
                 "run_class": "deterministic_baseline",
                 "algorithm": "existing word unigram/bigram TF-IDF + LogisticRegression(random_state=42)",
+                "per_example": [
+                    {"example_id": row["example_id"], "predicted_intent": prediction}
+                    for row, prediction in zip(rows, tfidf_predictions)
+                ],
                 "metrics": {
                     "intent_accuracy": {
                         "value": tfidf_metrics["accuracy"],
@@ -276,6 +284,7 @@ def run_comparison(
                 "run_class": "deterministic_mock" if mode == "mock" else "live_provider",
                 "metrics": runtime_summary["metrics"],
                 "run_metadata": runtime_summary["run_metadata"],
+                "per_example": runtime_rows,
             },
         },
         "separate_evaluations": {

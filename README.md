@@ -51,6 +51,8 @@ Optional:
 | `SUPPORT_AGENT_MIN_RETRIEVAL_SIMILARITY` | Override the lexical evidence floor |
 | `SUPPORT_AGENT_MIN_GROUNDING_TOKEN_SUPPORT` | Override the lexical grounding floor |
 | `SUPPORT_AGENT_ESCALATION_THRESHOLD` | Override the model-confidence review threshold |
+| `SUPPORT_AGENT_TIMEOUT_SECONDS` | Bound a provider call's timeout |
+| `SUPPORT_AGENT_MAX_RETRIES` | Bound provider retries (0–5) |
 
 ### 3. Download the dataset
 
@@ -590,6 +592,99 @@ acceptable-answer criteria, and unsupported-claim flags without changing the
 frozen CSV. It is a schema only: no new human annotations or adjudications were
 performed in this phase. Keep annotator identities and free-text notes outside
 tracked artifacts under access controls.
+
+#### Phase 6: Human-grounded evaluation workflow
+
+Phase 6 adds a separate 50-example, ID-only sample manifest at
+`reports/evaluation/human_annotation_sample_v1.json`, bound to the frozen CSV
+hash. It is sampled by a versioned hash ordering independent of provisional
+intent labels. The v2 submission and adjudication contracts are
+`reports/evaluation/annotation_schema_v2.json` and
+`reports/evaluation/adjudication_schema_v1.json`. No labels have been submitted
+for this subset and no human agreement or quality metric is available yet.
+
+Create a separate private file for each pseudonymous annotator:
+
+```powershell
+python -m src.evaluation.human_grounded_evaluation create-template `
+  --annotator-id reviewer-01 `
+  --output reports/evaluation/human_annotation_exports/reviewer-01.jsonl
+```
+
+Annotators independently label expected intent, evidence relevance
+(`0=irrelevant`, `1=partial`, `2=direct`), evidence sufficiency, expected
+escalation, acceptable-answer criteria, and unsupported-claim allowance.
+Run-specific response reviews are a `response_assessments` list, so a reviewer
+can assess multiple systems for the same example without creating duplicate
+example/annotator records. Each assessment names its run ID and human labels
+answer quality, groundedness, and unsupported claims. The reviewed output must
+be presented to the annotator through an approved access-controlled channel;
+evaluation and failure artifacts do not store generated replies. Do not infer
+expected escalation from the agent's choice. Validate and measure agreement with:
+
+```powershell
+python -m src.evaluation.human_grounded_evaluation validate `
+  --annotations reports/evaluation/human_annotation_exports/combined.jsonl
+python -m src.evaluation.human_grounded_evaluation agreement `
+  --annotations reports/evaluation/human_annotation_exports/combined.jsonl
+```
+
+For each example with at least two complete, independent submissions, an
+adjudicator supplies a JSON object containing all `final_labels` fields from
+the adjudication schema and records it separately:
+
+```powershell
+python -m src.evaluation.human_grounded_evaluation adjudicate `
+  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
+  --example-id golden-set-0007 `
+  --adjudicator-id review-lead `
+  --final-labels reports/evaluation/human_annotation_exports/golden-set-0007-final-labels.json `
+  --output reports/evaluation/human_annotation_exports/adjudicated.jsonl
+```
+
+The tooling reports Cohen's kappa for two annotators, Fleiss' kappa for three
+or more balanced categorical ratings, and quadratic-weighted Cohen's kappa
+for ordinal relevance from two annotators. It separately lists disagreements;
+an adjudicator records final labels in a separate adjudication artifact.
+Incomplete, uncertain, and non-adjudicated records are not counted as
+ground-truth labels.
+
+To evaluate the three systems in an existing comparison against actual
+adjudications, use the command below. Runtime response reviews use the Assistly
+run ID; baseline review IDs are the comparison run ID suffixed with
+`:majority` or `:tfidf_logistic_regression`.
+
+```powershell
+python -m src.evaluation.human_grounded_evaluation compare-systems `
+  --comparison reports/evaluation/runs/<run-id>.comparison.json `
+  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
+  --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
+  --output reports/evaluation/human_grounded_runs/<run-id>.json
+```
+
+Human Recall@K and MRR use only evidence IDs with independent relevance scores
+above zero. Evidence sufficiency and escalation precision/recall use only
+adjudicated labels. Response quality/groundedness/unsupported-claim measures
+require a human assessment tied to that exact run ID. Metrics without valid
+labels or matching assessments stay `null`; token usage and estimated cost
+also stay unavailable unless provider responses actually expose the values.
+Each human report records the frozen-data identity, annotation sample hash,
+annotation/adjudication hashes, evaluator and prompt versions, backend,
+provider/model, mode, and example count. The regression gate rejects mismatched
+identities and supports an optional `minimum_denominator`; no human metric
+threshold is enabled until adjudicated data exists.
+
+Annotation exports, adjudications, human reports, and human failure summaries
+are Git-ignored. The new tracked manifest contains IDs only; no customer text,
+replies, prompts, rationale, or real-world annotator identities are added to
+new artifacts. The Phase 5 `--live --limit N` flow remains the only live
+runtime path: it is off by default, explicitly opt-in, capped at 20 examples,
+and uses `SUPPORT_AGENT_PROVIDER` (`gemini` or `openai`) plus
+`SUPPORT_AGENT_MODEL`, `SUPPORT_AGENT_TIMEOUT_SECONDS`, and
+`SUPPORT_AGENT_MAX_RETRIES`. Provider-specific rate limiting remains in the
+existing adapter. No live provider credentials were available during Phase 6 verification, so
+`LIVE_PROVIDER_EVAL = NOT RUN`. Historical heuristic, deterministic mock,
+human-grounded, and live-provider results remain separate classes.
 
 ---
 

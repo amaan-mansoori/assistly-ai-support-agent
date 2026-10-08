@@ -57,6 +57,8 @@ frontend/tsconfig.tsbuildinfo
 
 # Per-run evaluation reports are local outputs; retain curated historical reports.
 reports/evaluation/runs/
+reports/evaluation/human_annotation_exports/
+reports/evaluation/human_grounded_runs/
 
 # Distribution
 *.whl

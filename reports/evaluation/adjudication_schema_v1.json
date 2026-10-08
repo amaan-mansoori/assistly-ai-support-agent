@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "assistly-human-adjudication-v1",
+  "title": "Assistly human annotation adjudication",
+  "description": "A separate final-label record; it never overwrites independent annotation submissions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "adjudication_version",
+    "dataset_version",
+    "dataset_sha256",
+    "example_id",
+    "adjudicator_id",
+    "source_annotator_ids",
+    "adjudication_status",
+    "final_labels"
+  ],
+  "properties": {
+    "adjudication_version": {
+      "const": "assistly-human-adjudication-v1"
+    },
+    "dataset_version": {
+      "const": "assistly-golden-220-v1"
+    },
+    "dataset_sha256": {
+      "const": "2a80bd3cafee26ef8a4cc665b9212a33eae4d08e12a808f9e0cfdce00b523b81"
+    },
+    "example_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adjudicator_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Use a pseudonymous identifier; do not store a real name or email."
+    },
+    "source_annotator_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "adjudication_status": {
+      "enum": [
+        "adjudicated",
+        "pending"
+      ]
+    },
+    "final_labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_intent",
+        "relevant_evidence_ids",
+        "evidence_relevance",
+        "evidence_sufficiency",
+        "expected_escalation",
+        "acceptable_answer_criteria",
+        "unsupported_claim_allowed",
+        "response_assessments"
+      ],
+      "properties": {
+        "expected_intent": {
+          "enum": [
+            "delivery_status_delay",
+            "delivery_marked_delivered_missing",
+            "return_refund",
+            "item_condition_or_fulfilment",
+            "order_cancellation_or_change",
+            "prime_membership",
+            "account_access_security",
+            "payment_charge_issue",
+            "product_availability_pricing",
+            "marketplace_seller",
+            "other_unclear",
+            "uncertain",
+            "not_annotated"
+          ]
+        },
+        "relevant_evidence_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidence_relevance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "evidence_id",
+              "score"
+            ],
+            "properties": {
+              "evidence_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "score": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              }
+            }
+          }
+        },
+        "evidence_sufficiency": {
+          "enum": [
+            "sufficient",
+            "insufficient",
+            "conflicting",
+            "uncertain",
+            "not_annotated"
+          ]
+        },
+        "expected_escalation": {
+          "enum": [
+            "escalate",
+            "auto_handle",
+            "uncertain",
+            "not_annotated"
+          ]
+        },
+        "acceptable_answer_criteria": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "addresses_primary_issue",
+              "uses_relevant_evidence",
+              "actionable_next_step",
+              "professional_and_empathetic",
+              "no_unsupported_claims",
+              "protects_sensitive_information",
+              "escalates_when_required"
+            ]
+          }
+        },
+        "unsupported_claim_allowed": {
+          "enum": [
+            "yes",
+            "no",
+            "uncertain",
+            "not_annotated"
+          ]
+        },
+        "response_assessments": {
+          "type": "array",
+          "description": "Zero or more run-specific human reviews.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "run_id",
+              "quality",
+              "groundedness",
+              "unsupported_claim_detected"
+            ],
+            "properties": {
+              "run_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quality": {
+                "enum": [
+                  "acceptable",
+                  "partially_acceptable",
+                  "unacceptable",
+                  "uncertain",
+                  "not_assessed"
+                ]
+              },
+              "groundedness": {
+                "enum": [
+                  "supported",
+                  "partially_supported",
+                  "unsupported",
+                  "uncertain",
+                  "not_assessed"
+                ]
+              },
+              "unsupported_claim_detected": {
+                "enum": [
+                  "yes",
+                  "no",
+                  "uncertain",
+                  "not_assessed"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -20,6 +20,13 @@ IDENTITY_FIELDS = (
     "model",
     "examples_evaluated",
 )
+OPTIONAL_HUMAN_IDENTITY_FIELDS = (
+    "annotation_dataset_version",
+    "annotation_sample_sha256",
+    "annotation_records_sha256",
+    "adjudication_records_sha256",
+    "ground_truth_source",
+)
 
 
 def _metric(report: dict[str, Any], dotted_path: str) -> float | None:
@@ -33,6 +40,20 @@ def _metric(report: dict[str, Any], dotted_path: str) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return float(value)
+
+
+def _metric_denominator(report: dict[str, Any], dotted_path: str) -> int | None:
+    value: Any = report
+    for part in dotted_path.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return None
+        value = value[part]
+    if not isinstance(value, dict):
+        return None
+    denominator = value.get("denominator")
+    if isinstance(denominator, bool) or not isinstance(denominator, int):
+        return None
+    return denominator
 
 
 def compare_reports(
@@ -53,6 +74,22 @@ def compare_reports(
         or base_metadata.get(field) != candidate_metadata.get(field)
         or (field != "model" and not base_metadata.get(field))
     }
+    human_identity_present = any(
+        field in base_metadata or field in candidate_metadata
+        for field in OPTIONAL_HUMAN_IDENTITY_FIELDS
+    )
+    if human_identity_present:
+        mismatches.update({
+            field: {
+                "baseline": base_metadata.get(field),
+                "candidate": candidate_metadata.get(field),
+            }
+            for field in OPTIONAL_HUMAN_IDENTITY_FIELDS
+            if field not in base_metadata
+            or field not in candidate_metadata
+            or base_metadata.get(field) != candidate_metadata.get(field)
+            or not base_metadata.get(field)
+        })
     baseline_config = base_metadata.get("configuration", {})
     candidate_config = candidate_metadata.get("configuration", {})
     if not isinstance(baseline_config, dict) or not isinstance(
@@ -98,6 +135,17 @@ def compare_reports(
             raise ValueError(f"max_degradation for {name!r} must be non-negative")
         base_value = _metric(baseline, path)
         candidate_value = _metric(candidate, path)
+        minimum_denominator = policy.get("minimum_denominator")
+        if minimum_denominator is not None and (
+            isinstance(minimum_denominator, bool)
+            or not isinstance(minimum_denominator, int)
+            or minimum_denominator < 1
+        ):
+            raise ValueError(
+                f"minimum_denominator for {name!r} must be a positive integer"
+            )
+        base_denominator = _metric_denominator(baseline, path)
+        candidate_denominator = _metric_denominator(candidate, path)
         check: dict[str, Any] = {
             "metric": name,
             "path": path,
@@ -106,10 +154,35 @@ def compare_reports(
             "max_degradation": float(limit),
             "direction": direction,
         }
-        if base_value is None or candidate_value is None:
+        if minimum_denominator is not None:
+            check.update({
+                "minimum_denominator": minimum_denominator,
+                "baseline_denominator": base_denominator,
+                "candidate_denominator": candidate_denominator,
+            })
+        if (
+            base_value is None
+            or candidate_value is None
+            or (
+                minimum_denominator is not None
+                and (
+                    base_denominator is None
+                    or candidate_denominator is None
+                    or base_denominator < minimum_denominator
+                    or candidate_denominator < minimum_denominator
+                )
+            )
+        ):
             check["passed"] = False
-            check["status"] = "required_metric_missing"
-            failures.append(f"{name}: required metric is missing")
+            check["status"] = (
+                "insufficient_denominator"
+                if base_value is not None
+                and candidate_value is not None
+                else "required_metric_missing"
+            )
+            failures.append(
+                f"{name}: metric missing or denominator below minimum"
+            )
         else:
             degradation = (
                 base_value - candidate_value
@@ -122,11 +195,17 @@ def compare_reports(
             if not check["passed"]:
                 failures.append(f"{name}: degradation {degradation:.6f} exceeds {limit}")
         checks.append(check)
+    identity = {field: base_metadata[field] for field in IDENTITY_FIELDS}
+    if human_identity_present:
+        identity.update({
+            field: base_metadata[field]
+            for field in OPTIONAL_HUMAN_IDENTITY_FIELDS
+        })
     return {
         "gate_version": "evaluation-regression-gate-v1",
         "compatible": True,
         "passed": not failures,
-        "identity": {field: base_metadata[field] for field in IDENTITY_FIELDS},
+        "identity": identity,
         "checks": checks,
         "failure_reasons": failures,
     }
