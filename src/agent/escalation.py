@@ -2,17 +2,31 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, TypedDict
+
+from src.agent.models import DecisionKind
 
 DECISIONS = ("auto_handle", "escalate")
 ESCALATION_CONFIDENCE_THRESHOLD = 0.7
+SENSITIVE_INTENTS = frozenset(
+    {
+        "account_access_security",
+        "payment_charge_issue",
+        "delivery_marked_delivered_missing",
+    }
+)
 
 
 def _matches(text: str, pattern: str) -> bool:
     return re.search(pattern, text, re.IGNORECASE) is not None
 
 
-def _result(decision: str, reason: str) -> dict[str, str]:
+class EscalationResult(TypedDict):
+    decision: DecisionKind
+    reason: str
+
+
+def _result(decision: DecisionKind, reason: str) -> EscalationResult:
     return {"decision": decision, "reason": reason}
 
 
@@ -22,19 +36,18 @@ def decide_escalation(
     *,
     grounding_confidence: float | None = None,
     needs_human_review: bool = False,
-) -> dict[str, str]:
+    confidence_threshold: float = ESCALATION_CONFIDENCE_THRESHOLD,
+) -> EscalationResult:
     """Choose ``auto_handle`` or ``escalate`` using explicit local rules."""
     text = str(customer_text or "")
+    if not 0 <= confidence_threshold <= 1:
+        raise ValueError("confidence_threshold must be between 0 and 1")
     if needs_human_review:
         return _result("escalate", "The draft marked this case for human review.")
-    if grounding_confidence is not None and grounding_confidence < ESCALATION_CONFIDENCE_THRESHOLD:
+    if grounding_confidence is not None and grounding_confidence < confidence_threshold:
         return _result("escalate", "Evidence confidence is below the review threshold.")
 
-    if predicted_intent in {
-        "account_access_security",
-        "payment_charge_issue",
-        "delivery_marked_delivered_missing",
-    }:
+    if predicted_intent in SENSITIVE_INTENTS:
         return _result("escalate", "This intent requires account-specific human handling.")
 
     if predicted_intent == "marketplace_seller":
@@ -95,7 +108,7 @@ def decide_escalation(
     return _result("escalate", "The intent is not recognized by the approved escalation policy.")
 
 
-def decide_for_record(record: dict[str, Any]) -> dict[str, str]:
+def decide_for_record(record: dict[str, Any]) -> EscalationResult:
     """Apply the policy to an existing generated-reply record."""
     return decide_escalation(
         str(record.get("customer_text", "")),

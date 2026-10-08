@@ -48,6 +48,12 @@ experiments/*
 .coverage
 htmlcov/
 .pytest_cache/
+frontend/node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+
+# Local platform data
+*.db
 
 # Distribution
 *.whl

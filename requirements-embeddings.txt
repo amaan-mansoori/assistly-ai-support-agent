@@ -1,0 +1,3 @@
+# Optional CPU-only semantic embeddings. FastEmbed uses ONNX Runtime's CPU
+# provider; it does not install Torch or CUDA packages.
+fastembed==0.9.0

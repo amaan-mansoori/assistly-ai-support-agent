@@ -26,14 +26,22 @@ intents:
 retrieval:
   # Top-k similar historical conversations to retrieve
   top_k: 5
+  # Conservative lexical/semantic or hybrid score floor; not calibrated confidence.
+  minimum_similarity: 0.1
 
 agent:
   # LLM provider: "openai" or "gemini"
   llm_provider: "gemini"
   model_name: "gemini-2.0-flash"
+  provider_timeout_seconds: 30
+  provider_max_retries: 2
+  history_window: 12
+  history_max_chars: 12000
   temperature: 0.3
   # Confidence threshold below which the agent escalates to human
   escalation_threshold: 0.7
+  # Lexical diagnostic floor; this is a safety heuristic, not factual proof.
+  minimum_grounding_token_support: 0.5
 
 evaluation:
   # Metrics to compute

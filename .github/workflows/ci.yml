@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            requirements-embeddings.txt
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pip install -r requirements-embeddings.txt
+      # NLTK 3.10.3 is the latest available release; its affected model-artifact
+      # APIs are not used and NLTK is excluded from the runtime image.
+      - run: pip-audit --ignore-vuln PYSEC-2026-3740
+      - run: >-
+          ruff check --isolated --select E4,E7,E9,F821
+          src/agent src/api src/application src/db src/platform src/retrieval
+          src/evaluation/evaluate_integrated_agent.py
+          tests/test_agent_config.py tests/test_agent_context.py
+          tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py
+          tests/test_platform_api.py tests/test_platform_foundation.py
+          tests/test_rate_limit.py tests/test_retrieval_backends.py
+          tests/test_staff_provisioning.py tests/test_retention.py
+      - run: python -m alembic upgrade head
+        env:
+          APP_ENV: test
+          DATABASE_URL: sqlite:///./ci-support-agent.db
+          JWT_SECRET: ci-test-secret-that-is-longer-than-32-bytes
+      - run: python -m pytest -q
+        env:
+          APP_ENV: test
+          DATABASE_URL: sqlite:///./ci-support-agent.db
+          JWT_SECRET: ci-test-secret-that-is-longer-than-32-bytes
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=moderate
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
