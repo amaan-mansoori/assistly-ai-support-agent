@@ -9,6 +9,13 @@ import re
 from typing import Any
 
 DEFAULT_MANIFEST = Path("reports/evaluation/evaluation_dataset_manifest.json")
+FROZEN_DATASET = Path("data/golden/golden_set.csv")
+FROZEN_DATASET_SHA256 = (
+    "2a80bd3cafee26ef8a4cc665b9212a33eae4d08e12a808f9e0cfdce00b523b81"
+)
+FROZEN_MANIFEST_SHA256 = (
+    "3b0f6fa241cb686832536471d0982ae8434870b83ffa45e6cb23a07d20c4ed77"
+)
 EXPECTED_COLUMNS = (
     "example_id",
     "customer_tweet_id",
@@ -58,6 +65,20 @@ def verify_dataset(
             f"dataset path mismatch: expected {expected_path}, got {dataset_path}"
         )
     actual_hash = sha256_file(dataset_path)
+    if (
+        dataset_path.resolve() == FROZEN_DATASET.resolve()
+        and actual_hash != FROZEN_DATASET_SHA256
+    ):
+        raise ValueError(
+            "frozen evaluation dataset does not match its pinned SHA-256"
+        )
+    if (
+        manifest_path.resolve() == DEFAULT_MANIFEST.resolve()
+        and sha256_file(manifest_path) != FROZEN_MANIFEST_SHA256
+    ):
+        raise ValueError(
+            "evaluation dataset manifest does not match its pinned SHA-256"
+        )
     if actual_hash != expected_hash:
         raise ValueError(
             "evaluation dataset SHA-256 mismatch; refusing to evaluate changed data"

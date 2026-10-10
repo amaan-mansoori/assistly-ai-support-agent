@@ -533,10 +533,16 @@ def _request_id(value: AgentRequest | Mapping[str, Any]) -> str:
 
 def _provider_error_category(error: Exception) -> str:
     status = getattr(error, "status_code", None)
+    if not isinstance(status, int):
+        status = getattr(error, "code", None)
     if status == 429:
         return "rate_limited"
     if isinstance(status, int) and status >= 500:
         return "provider_server_error"
+    if isinstance(status, int) and status in {401, 403}:
+        return "provider_auth_error"
+    if isinstance(status, int) and 400 <= status < 500:
+        return "provider_client_error"
     if isinstance(error, TimeoutError) or "timeout" in type(error).__name__.lower():
         return "provider_timeout"
     return "provider_error"

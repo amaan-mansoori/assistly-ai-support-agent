@@ -56,7 +56,7 @@ def create_app(
     app.state.metrics = MetricsRegistry()
     app.state.agent_factory = agent_factory
     app.state.provider_name = "gemini"
-    app.state.model_name = "gemini-2.0-flash"
+    app.state.model_name = "gemini-3.8-flash"
     if agent_factory is None:
         agent_cache: list[Any] = []
         agent_lock = Lock()

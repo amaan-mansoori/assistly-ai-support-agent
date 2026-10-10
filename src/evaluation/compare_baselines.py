@@ -14,9 +14,14 @@ from src.agent.config import AgentConfig
 from src.agent.orchestrator import SupportAgent
 from src.agent.reply_generator import DeterministicMockProvider, configured_llm_call
 from src.db.database import make_engine, make_session_factory
-from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
+from src.evaluation.dataset_manifest import (
+    DEFAULT_MANIFEST,
+    sha256_file,
+    verify_dataset,
+)
 from src.evaluation.evaluate_integrated_agent import (
     EVALUATION_SCHEMA_VERSION,
+    EVIDENCE_POLICY_VERSION,
     EVALUATOR_VERSION,
     PROMPT_VERSION,
     RETRIEVAL_VERSION,
@@ -188,11 +193,13 @@ def run_comparison(
         "working_tree_dirty": _working_tree_dirty(),
         "dataset_version": manifest["dataset_version"],
         "dataset_sha256": manifest["sha256"],
+        "dataset_manifest_sha256": sha256_file(manifest_path),
         "dataset_provenance_status": manifest["provenance_status"],
         "evaluator_version": EVALUATOR_VERSION,
         "evaluation_schema_version": EVALUATION_SCHEMA_VERSION,
         "prompt_version": PROMPT_VERSION,
         "retrieval_version": RETRIEVAL_VERSION,
+        "evidence_policy_version": EVIDENCE_POLICY_VERSION,
         "examples_evaluated": len(rows),
         "retrieval_backend": settings.retriever_backend,
         "run_mode": "deterministic_mock" if mode == "mock" else "live_provider",

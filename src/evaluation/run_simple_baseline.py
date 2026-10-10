@@ -5,8 +5,10 @@ import csv
 import json
 import re
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
+from uuid import uuid4
 
 from numpy.typing import NDArray
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -21,7 +23,11 @@ from sklearn.metrics import (
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
+from src.evaluation.dataset_manifest import (
+    DEFAULT_MANIFEST,
+    sha256_file,
+    verify_dataset,
+)
 from src.intents.final_taxonomy_audit import classify_intent
 from src.intents.refine_taxonomy import clean_customer_text, detect_language
 
@@ -162,6 +168,15 @@ def write_reports(metrics: dict[str, Any], filtered: dict[str, int],
         "", "## Per-intent metrics", "", "| Intent | Precision | Recall | F1 | Support |",
         "|---|---:|---:|---:|---:|",
     ]
+    run_metadata = metrics.get("run_metadata")
+    if isinstance(run_metadata, dict):
+        lines[5:5] = [
+            f"- Dataset SHA-256: `{run_metadata['dataset_sha256']}`",
+            f"- Manifest SHA-256: `{run_metadata['dataset_manifest_sha256']}`",
+            f"- Run timestamp: `{run_metadata['timestamp_utc']}`",
+            f"- Dataset provenance: `{run_metadata['dataset_provenance_status']}`",
+            "",
+        ]
     for intent in ALLOWED_LABELS:
         v = metrics["per_intent"][intent]
         lines.append(f"| `{intent}` | {v['precision']:.6f} | {v['recall']:.6f} | {v['f1']:.6f} | {v['support']} |")
@@ -173,9 +188,28 @@ def write_reports(metrics: dict[str, Any], filtered: dict[str, int],
 
 
 def main() -> None:
-    _, evaluation_rows = verify_dataset(GOLDEN_SET, DEFAULT_MANIFEST)
+    manifest, evaluation_rows = verify_dataset(GOLDEN_SET, DEFAULT_MANIFEST)
     training_texts, training_labels, filtered = load_training_rows(evaluation_rows=evaluation_rows)
     metrics, _ = evaluate(training_texts, training_labels, evaluation_rows)
+    metrics["run_metadata"] = {
+        "run_id": datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        + "-" + uuid4().hex[:8],
+        "timestamp_utc": datetime.now(UTC).isoformat(),
+        "dataset_version": manifest["dataset_version"],
+        "dataset_sha256": manifest["sha256"],
+        "dataset_manifest_sha256": sha256_file(DEFAULT_MANIFEST),
+        "dataset_provenance_status": manifest["provenance_status"],
+        "evaluator_version": "tfidf-logistic-regression-baseline-v1",
+        "evaluation_schema_version": "assistly-evaluation-schema-v2",
+        "run_mode": "deterministic_baseline",
+        "provider": "not_applicable",
+        "model": "tfidf_logistic_regression",
+        "examples_evaluated": len(evaluation_rows),
+        "configuration": {
+            "training_filtering": filtered,
+            "training_examples": len(training_texts),
+        },
+    }
     write_reports(metrics, filtered)
     print(json.dumps(metrics, indent=2))
 

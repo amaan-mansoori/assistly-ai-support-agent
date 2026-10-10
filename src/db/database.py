@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from typing import Any
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -12,7 +13,7 @@ class Base(DeclarativeBase):
 
 
 def make_engine(database_url: str) -> Engine:
-    options = {"pool_pre_ping": True}
+    options: dict[str, Any] = {"pool_pre_ping": True, "hide_parameters": True}
     if database_url.startswith("sqlite:"):
         options["connect_args"] = {"check_same_thread": False}
     engine = create_engine(database_url, **options)

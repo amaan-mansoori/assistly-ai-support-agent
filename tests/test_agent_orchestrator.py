@@ -433,7 +433,9 @@ def test_provider_timeout_fails_safely_without_exposing_exception():
     [
         (TimeoutError("provider secret timeout"), "provider_timeout"),
         (type("RateLimitError", (Exception,), {"status_code": 429})("secret"), "rate_limited"),
-        (type("ServerError", (Exception,), {"status_code": 503})("secret"), "provider_server_error"),
+        (type("ServerError", (Exception,), {"code": 503})("secret"), "provider_server_error"),
+        (type("AuthenticationError", (Exception,), {"code": 403})("secret"), "provider_auth_error"),
+        (type("BadRequestError", (Exception,), {"code": 400})("secret"), "provider_client_error"),
     ],
 )
 def test_provider_error_categories_are_sanitized_and_fail_closed(error, category):

@@ -33,11 +33,15 @@ jobs:
           src/evaluation/dataset_manifest.py src/evaluation/regression_gate.py
           src/evaluation/compare_baselines.py
           src/evaluation/human_grounded_evaluation.py src/evaluation/llm_judge.py
+          src/evaluation/independent_retrieval_evaluation.py
+          src/evaluation/retrieval_relevance_workflow.py
           src/evaluation/run_simple_baseline.py src/evaluation/run_trivial_baseline.py
           tests/test_agent_config.py tests/test_agent_context.py
           tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py
           tests/test_evaluation_reporting.py tests/test_phase4_evaluation_controls.py
           tests/test_phase5_quality.py tests/test_phase6_human_evaluation.py
+          tests/test_independent_retrieval_evaluation.py
+          tests/test_retrieval_relevance_workflow.py
           tests/test_reply_generator.py
           tests/test_historical_retriever.py
           tests/test_platform_api.py tests/test_platform_foundation.py

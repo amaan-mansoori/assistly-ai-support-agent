@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.evaluation import evaluate_integrated_agent
+from src.evaluation import human_grounded_evaluation
 from src.evaluation.human_grounded_evaluation import (
     ADJUDICATION_VERSION,
     ANNOTATION_VERSION,
@@ -13,6 +14,7 @@ from src.evaluation.human_grounded_evaluation import (
     DEFAULT_SAMPLE,
     analyze_annotations,
     create_adjudication_record,
+    create_exclusion_record,
     create_annotation_template,
     create_sample_manifest,
     evaluate_human_comparison,
@@ -20,8 +22,10 @@ from src.evaluation.human_grounded_evaluation import (
     fleiss_kappa,
     load_sample,
     quadratic_weighted_cohen_kappa,
+    summarize_annotation_coverage,
     validate_adjudication_records,
     validate_annotation_records,
+    validate_exclusion_records,
 )
 from src.evaluation.regression_gate import compare_reports
 
@@ -107,6 +111,161 @@ def test_schema_and_template_are_versioned_and_leave_labels_empty():
     assert all(row["expected_intent"] == "not_annotated" for row in template)
     assert all(row["evidence_relevance"] == [] for row in template)
     assert validate_annotation_records(template, sample) == template
+    with pytest.raises(AnnotationError, match="pseudonymous ID"):
+        create_annotation_template(sample, "reviewer@example.test")
+
+
+def test_annotation_coverage_distinguishes_workflow_states():
+    sample = _sample(("adjudicated", "partial", "pending", "excluded", "empty"))
+    annotations = [
+        _annotation("adjudicated", "reviewer-a"),
+        _annotation("adjudicated", "reviewer-b"),
+        _annotation(
+            "partial",
+            "reviewer-c",
+            annotation_status="uncertain",
+            expected_intent="uncertain",
+        ),
+        _annotation("pending", "reviewer-d"),
+    ]
+    adjudications = [
+        _adjudication(sample, "adjudicated", ["reviewer-a", "reviewer-b"])
+    ]
+    exclusions = [{
+        "exclusion_version": "assistly-human-exclusion-v1",
+        "dataset_version": sample["dataset_version"],
+        "dataset_sha256": sample["dataset_sha256"],
+        "example_id": "excluded",
+        "excluded_by": "review-lead",
+        "reason": "source_unreadable",
+        "status": "excluded",
+    }]
+
+    coverage = summarize_annotation_coverage(
+        sample, annotations, adjudications, exclusions
+    )
+
+    assert coverage["status_counts"] == {
+        "adjudicated": 1,
+        "partially_annotated": 1,
+        "annotated_pending_adjudication": 1,
+        "excluded": 1,
+        "unannotated": 1,
+    }
+    assert coverage["human_ground_truth_count"] == 1
+    assert "customer_text" not in json.dumps(coverage)
+    assert validate_exclusion_records(exclusions, sample) == exclusions
+
+
+def test_annotated_status_rejects_incomplete_or_inconsistent_labels():
+    sample = _sample()
+    incomplete = _annotation(
+        "example-1",
+        "reviewer-a",
+        acceptable_answer_criteria=[],
+    )
+    with pytest.raises(AnnotationError, match="annotated records require"):
+        validate_annotation_records([incomplete], sample)
+
+    inconsistent_template = create_annotation_template(sample, "reviewer-a")[0]
+    inconsistent_template["expected_intent"] = "delivery_status_delay"
+    with pytest.raises(AnnotationError, match="must not contain labels"):
+        validate_annotation_records([inconsistent_template], sample)
+
+
+def test_exclusions_reject_invalid_ids_duplicates_and_dataset_mismatch():
+    sample = _sample()
+    exclusion = {
+        "exclusion_version": "assistly-human-exclusion-v1",
+        "dataset_version": sample["dataset_version"],
+        "dataset_sha256": sample["dataset_sha256"],
+        "example_id": "example-1",
+        "excluded_by": "review-lead",
+        "reason": "privacy_review",
+        "status": "excluded",
+    }
+    with pytest.raises(AnnotationError, match="duplicate exclusion"):
+        validate_exclusion_records([exclusion, exclusion], sample)
+    with pytest.raises(AnnotationError, match="dataset identity mismatch"):
+        validate_exclusion_records(
+            [{**exclusion, "dataset_sha256": "b" * 64}], sample
+        )
+    with pytest.raises(AnnotationError, match="invalid reason"):
+        validate_exclusion_records([{**exclusion, "reason": "private explanation"}], sample)
+    with pytest.raises(AnnotationError, match="pseudonymous excluded_by"):
+        create_exclusion_record(sample, "example-1", "person@example.test", "other")
+
+
+def test_annotation_cli_merges_separate_exports_and_tracks_exclusions(
+    monkeypatch, tmp_path, capsys
+):
+    sample = load_sample(DEFAULT_SAMPLE)
+    export_paths = []
+    for annotator_id in ("reviewer-a", "reviewer-b"):
+        export = tmp_path / f"{annotator_id}.jsonl"
+        export.write_text(
+            "".join(
+                json.dumps(row) + "\n"
+                for row in create_annotation_template(sample, annotator_id)
+            ),
+            encoding="utf-8",
+        )
+        export_paths.append(export)
+    combined = tmp_path / "combined.jsonl"
+    monkeypatch.setattr(sys, "argv", [
+        "human_grounded_evaluation",
+        "merge",
+        "--annotations",
+        *(str(path) for path in export_paths),
+        "--output",
+        str(combined),
+    ])
+
+    assert human_grounded_evaluation.main() == 0
+    assert len(combined.read_text(encoding="utf-8").splitlines()) == 100
+    assert json.loads(capsys.readouterr().out)["human_metrics"] == (
+        "not computed by merge"
+    )
+    merged_content = combined.read_text(encoding="utf-8")
+    with pytest.raises(AnnotationError, match="refusing to overwrite"):
+        human_grounded_evaluation.main()
+    assert combined.read_text(encoding="utf-8") == merged_content
+
+    exclusions = tmp_path / "exclusions.jsonl"
+    for example_id in sample["example_ids"][:2]:
+        monkeypatch.setattr(sys, "argv", [
+            "human_grounded_evaluation",
+            "exclude",
+            "--sample",
+            str(DEFAULT_SAMPLE),
+            "--example-id",
+            example_id,
+            "--excluded-by",
+            "review-lead",
+            "--reason",
+            "source_unavailable",
+            "--output",
+            str(exclusions),
+        ])
+        assert human_grounded_evaluation.main() == 0
+    assert len(exclusions.read_text(encoding="utf-8").splitlines()) == 2
+
+    coverage_path = tmp_path / "coverage.json"
+    monkeypatch.setattr(sys, "argv", [
+        "human_grounded_evaluation",
+        "coverage",
+        "--sample",
+        str(DEFAULT_SAMPLE),
+        "--annotations",
+        str(combined),
+        "--exclusions",
+        str(exclusions),
+        "--output",
+        str(coverage_path),
+    ])
+    assert human_grounded_evaluation.main() == 0
+    coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+    assert coverage["status_counts"] == {"excluded": 2, "unannotated": 48}
 
 
 def test_checked_in_sample_is_exactly_the_frozen_label_independent_sample():
@@ -638,7 +797,7 @@ def test_human_comparison_keeps_all_three_systems_separate():
     ]["value"] == 0.5
     assert result["results"]["majority"]["metrics"][
         "retrieval_recall_at_k"
-    ]["1"]["value"] is None
+    ]["1"]["value"] == 0
     assert result["results"]["majority"]["metrics"][
         "evidence_sufficiency_accuracy"
     ]["value"] is None
@@ -654,11 +813,13 @@ def test_human_regression_identity_and_optional_sample_threshold():
     base = {
         "run_metadata": {
             "dataset_sha256": "frozen",
+            "dataset_manifest_sha256": "manifest",
             "dataset_version": "golden-v1",
             "evaluation_schema_version": "human-eval-v1",
             "evaluator_version": "human-evaluator-v1",
             "prompt_version": "prompt-v1",
             "retrieval_version": "retrieval-v1",
+            "evidence_policy_version": "assistly-evidence-policy-v2",
             "retrieval_backend": "tfidf",
             "run_mode": "live_provider",
             "provider": "gemini",
@@ -689,9 +850,10 @@ def test_human_regression_identity_and_optional_sample_threshold():
 
     assert compare_reports(base, candidate, thresholds)["passed"] is True
     candidate["metrics"]["escalation_recall"]["denominator"] = 4
-    assert (
-        compare_reports(base, candidate, thresholds)["checks"][0]["status"]
-        == "insufficient_denominator"
+    denominator_mismatch = compare_reports(base, candidate, thresholds)
+    assert denominator_mismatch["compatible"] is False
+    assert "metric_denominator.human_escalation_recall" in (
+        denominator_mismatch["identity_mismatches"]
     )
     candidate["run_metadata"]["annotation_records_sha256"] = "another-annotation-set"
     result = compare_reports(base, candidate, thresholds)

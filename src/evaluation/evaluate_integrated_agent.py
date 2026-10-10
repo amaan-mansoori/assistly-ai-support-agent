@@ -23,7 +23,7 @@ from src.agent.reply_generator import (
     configured_llm_call,
 )
 from src.db.database import make_engine, make_session_factory
-from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
+from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, sha256_file, verify_dataset
 from src.intents.final_taxonomy_audit import classify_intent
 from src.platform.config import PlatformSettings
 from src.retrieval.factory import build_retriever
@@ -32,9 +32,10 @@ from src.retrieval.historical_retriever import GOLDEN
 PROVENANCE_NOTE = (
     "Provisional: the 220-row labeled evaluation set has unresolved human-label provenance."
 )
-EVALUATOR_VERSION = "integrated-evaluator-v3"
+EVALUATOR_VERSION = "integrated-evaluator-v4"
 PROMPT_VERSION = "assistly-support-prompt-v3"
 RETRIEVAL_VERSION = "assistly-retrieval-v2"
+EVIDENCE_POLICY_VERSION = "assistly-evidence-policy-v2"
 EVALUATION_SCHEMA_VERSION = "assistly-evaluation-schema-v2"
 FAILURE_CATEGORIES = frozenset({
     "ambiguous_intent",
@@ -509,6 +510,7 @@ def evaluate_examples(
         "evaluator_version": EVALUATOR_VERSION,
         "evaluation_schema_version": EVALUATION_SCHEMA_VERSION,
         "retrieval_version": RETRIEVAL_VERSION,
+        "evidence_policy_version": EVIDENCE_POLICY_VERSION,
         "provenance": PROVENANCE_NOTE,
         "examples_evaluated": examples_count,
         "metrics": metrics,
@@ -655,11 +657,13 @@ def main() -> int:
         "working_tree_dirty": _working_tree_dirty(),
         "dataset_version": manifest["dataset_version"],
         "dataset_sha256": manifest["sha256"],
+        "dataset_manifest_sha256": sha256_file(args.manifest),
         "dataset_provenance_status": manifest["provenance_status"],
         "evaluator_version": EVALUATOR_VERSION,
         "prompt_version": PROMPT_VERSION,
         "evaluation_schema_version": EVALUATION_SCHEMA_VERSION,
         "retrieval_version": RETRIEVAL_VERSION,
+        "evidence_policy_version": EVIDENCE_POLICY_VERSION,
         "provider": provider_name,
         "model": model_name,
         "run_mode": summary["run_mode"],

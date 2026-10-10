@@ -3,6 +3,15 @@ import pytest
 from src.agent.config import AgentConfig
 
 
+def test_default_gemini_model_is_current_flash_model(tmp_path, monkeypatch):
+    monkeypatch.delenv("SUPPORT_AGENT_MODEL", raising=False)
+
+    config = AgentConfig.load(tmp_path / "missing.yaml")
+
+    assert config.provider == "gemini"
+    assert config.model == "gemini-3.8-flash"
+
+
 def test_yaml_configuration_is_overridden_by_environment(tmp_path, monkeypatch):
     config_path = tmp_path / "agent.yaml"
     config_path.write_text(

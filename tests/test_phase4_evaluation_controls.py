@@ -53,11 +53,13 @@ def _run_report(*, accuracy=0.8, recall=0.5, run_mode="deterministic_mock"):
     return {
         "run_metadata": {
             "dataset_sha256": "frozen-hash",
+            "dataset_manifest_sha256": "manifest-hash",
             "dataset_version": "fixture-v1",
             "evaluation_schema_version": "assistly-evaluation-schema-v2",
-            "evaluator_version": "integrated-evaluator-v3",
+            "evaluator_version": "integrated-evaluator-v4",
             "prompt_version": "assistly-support-prompt-v3",
             "retrieval_version": "assistly-retrieval-v2",
+            "evidence_policy_version": "assistly-evidence-policy-v2",
             "retrieval_backend": "tfidf",
             "run_mode": run_mode,
             "provider": "deterministic_mock",
@@ -134,6 +136,16 @@ def test_regression_gate_rejects_incompatible_dataset_or_run_mode():
     assert result["compatible"] is False
     assert result["passed"] is False
     assert "run_mode" in result["identity_mismatches"]
+    candidate = _run_report()
+    candidate["run_metadata"]["dataset_manifest_sha256"] = "different-manifest"
+    manifest_result = compare_reports(_run_report(), candidate, thresholds)
+    assert manifest_result["compatible"] is False
+    assert "dataset_manifest_sha256" in manifest_result["identity_mismatches"]
+    candidate = _run_report()
+    candidate["run_metadata"]["evidence_policy_version"] = "older-policy"
+    policy_result = compare_reports(_run_report(), candidate, thresholds)
+    assert policy_result["compatible"] is False
+    assert "evidence_policy_version" in policy_result["identity_mismatches"]
 
 
 def test_regression_gate_rejects_provider_or_configuration_mismatch():

@@ -83,7 +83,7 @@ def evaluate_reply_quality(
     ]
     word_counts = [len(str(row.get("draft_reply") or "").split()) for row in records]
     result: dict[str, Any] = {
-        "metric_version": "offline-v1",
+        "metric_version": "offline-v2",
         "input_examples": n,
         "non_empty_reply_rate": round(non_empty / n, 6) if n else 0.0,
         "mean_reply_word_count": round(sum(word_counts) / n, 6) if n else 0.0,
@@ -124,4 +124,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

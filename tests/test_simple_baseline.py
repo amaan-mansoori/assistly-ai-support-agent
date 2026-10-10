@@ -41,9 +41,16 @@ def test_reports_and_metrics_are_consistent(tmp_path: Path):
     # The helper is tested with a real evaluation-sized dataset elsewhere; this
     # check focuses on report serialization and metric shape.
     metrics["number_of_evaluation_examples"] = 1
+    metrics["run_metadata"] = {
+        "dataset_sha256": "dataset-hash",
+        "dataset_manifest_sha256": "manifest-hash",
+        "timestamp_utc": "2026-10-01T00:00:00+00:00",
+        "dataset_provenance_status": "unresolved_provisional",
+    }
     json_path, md_path = tmp_path / "result.json", tmp_path / "result.md"
     write_reports(metrics, {"total_interim_rows": 3}, json_path, md_path)
     loaded = json.loads(json_path.read_text(encoding="utf-8"))
     assert loaded["accuracy"] == metrics["accuracy"]
     assert len(loaded["confusion_matrix"]) == len(ALLOWED_LABELS)
     assert md_path.exists()
+    assert "manifest-hash" in md_path.read_text(encoding="utf-8")

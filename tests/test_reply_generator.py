@@ -252,7 +252,7 @@ def test_other_gemini_models_are_not_rate_limited(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "google.genai", types.SimpleNamespace(types=fake_types))
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
-    call = gemini_call("gemini-2.0-flash")
+    call = gemini_call("gemini-3.8-flash")
     call("system", "user")
     call("system", "user")
     assert sleeps == []

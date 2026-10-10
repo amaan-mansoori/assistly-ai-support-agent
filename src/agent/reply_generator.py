@@ -276,7 +276,7 @@ def gemini_call(
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not configured; set it before generating replies.")
-    selected_model = model or os.getenv("SUPPORT_AGENT_MODEL") or "gemini-2.0-flash"
+    selected_model = model or os.getenv("SUPPORT_AGENT_MODEL") or "gemini-3.8-flash"
     try:
         from google import genai
         from google.genai import types

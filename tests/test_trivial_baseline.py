@@ -42,6 +42,12 @@ def test_load_labels_rejects_missing_and_invalid(tmp_path: Path):
 
 def test_reports_are_written(tmp_path: Path):
     metrics = evaluate(["delivery_status_delay", "return_refund"])
+    metrics["run_metadata"] = {
+        "dataset_sha256": "dataset-hash",
+        "dataset_manifest_sha256": "manifest-hash",
+        "timestamp_utc": "2026-10-01T00:00:00+00:00",
+        "dataset_provenance_status": "unresolved_provisional",
+    }
     json_path = tmp_path / "result.json"
     markdown_path = tmp_path / "result.md"
     write_reports(metrics, json_path, markdown_path)
@@ -49,3 +55,4 @@ def test_reports_are_written(tmp_path: Path):
     assert markdown_path.exists()
     assert "majority_class" in json_path.read_text(encoding="utf-8")
     assert "Per-intent metrics" in markdown_path.read_text(encoding="utf-8")
+    assert "manifest-hash" in markdown_path.read_text(encoding="utf-8")

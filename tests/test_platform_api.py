@@ -312,7 +312,7 @@ def test_escalation_persists_ticket_and_staff_can_assign_start_resolve(platform)
     assert detail.json()["agent_run"]["draft_reply"] == "This draft is for internal human review."
     assert detail.json()["agent_run"]["evidence_reason"] == "test evidence"
     assert detail.json()["agent_run"]["intent_confidence"] is None
-    assert detail.json()["agent_run"]["model"] == "gemini-2.0-flash"
+    assert detail.json()["agent_run"]["model"] == "gemini-3.8-flash"
     assert response.json().get("assistant_message") is None
     assert started.status_code == 200 and started.json()["status"] == "in_progress"
     assert resolved.status_code == 200 and resolved.json()["status"] == "resolved"

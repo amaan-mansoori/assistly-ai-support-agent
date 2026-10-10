@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "assistly-human-exclusion-v1",
+  "title": "Assistly human evaluation example exclusion",
+  "description": "A privacy-minimized exclusion decision stored separately from annotation submissions and adjudications.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exclusion_version",
+    "dataset_version",
+    "dataset_sha256",
+    "example_id",
+    "excluded_by",
+    "reason",
+    "status"
+  ],
+  "properties": {
+    "exclusion_version": {
+      "const": "assistly-human-exclusion-v1"
+    },
+    "dataset_version": {
+      "const": "assistly-golden-220-v1"
+    },
+    "dataset_sha256": {
+      "const": "2a80bd3cafee26ef8a4cc665b9212a33eae4d08e12a808f9e0cfdce00b523b81"
+    },
+    "example_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "excluded_by": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+      "description": "Pseudonymous reviewer identifier; never use a real name or email."
+    },
+    "reason": {
+      "enum": [
+        "source_unavailable",
+        "source_unreadable",
+        "duplicate_example",
+        "privacy_review",
+        "other"
+      ]
+    },
+    "status": {
+      "const": "excluded"
+    }
+  }
+}

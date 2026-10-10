@@ -35,12 +35,13 @@ def _content_tokens(text: Any) -> set[str]:
 
 
 def _evidence_texts(record: dict[str, Any]) -> list[str]:
+    """Only historical support resolutions count as evidence for a reply."""
     values: list[str] = []
     retrieved = record.get("retrieved_examples") or []
     if isinstance(retrieved, list):
         for item in retrieved:
             if isinstance(item, dict):
-                values.extend((item.get("customer_text", ""), item.get("amazonhelp_response", "")))
+                values.append(item.get("amazonhelp_response", ""))
     return [str(value) for value in values if value]
 
 
@@ -68,6 +69,7 @@ def evaluate_grounding(record: dict[str, Any]) -> dict[str, Any]:
     claim_rate = len(supported_claims) / len(claims) if claims else 1.0
     score = (token_rate + claim_rate) / 2 if draft and evidence else 0.0
     return {
+        "metric_version": "offline-grounding-v2",
         "example_id": record.get("example_id"),
         "has_reply": bool(draft),
         "evidence_count": len(record.get("retrieved_examples") or []),

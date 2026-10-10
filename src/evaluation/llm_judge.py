@@ -19,7 +19,11 @@ from typing import Any, Callable, Iterable, Protocol
 from uuid import uuid4
 
 from src.agent.reply_generator import GeminiRateLimiter
-from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
+from src.evaluation.dataset_manifest import (
+    DEFAULT_MANIFEST,
+    sha256_file,
+    verify_dataset,
+)
 from src.evaluation.grounding import evaluate_grounding
 from src.evaluation.reply_quality import DEFAULT_INPUT, load_jsonl
 
@@ -288,6 +292,28 @@ def judge_records(
     }
 
 
+def hydrate_customer_text(
+    records: Iterable[dict[str, Any]],
+    dataset_rows: Iterable[dict[str, str]],
+) -> list[dict[str, Any]]:
+    """Attach source messages in memory without persisting them in artifacts."""
+    customer_text_by_id = {
+        row["example_id"]: row["customer_text"]
+        for row in dataset_rows
+        if row.get("example_id") and row.get("customer_text")
+    }
+    hydrated = []
+    for record in records:
+        example_id = str(record.get("example_id", ""))
+        customer_text = customer_text_by_id.get(example_id)
+        if customer_text is None:
+            raise ValueError(
+                f"judge input example_id {example_id!r} is absent from the verified dataset"
+            )
+        hydrated.append({**record, "customer_text": customer_text})
+    return hydrated
+
+
 def write_report(report: dict[str, Any], output: Path = DEFAULT_OUTPUT) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
@@ -378,8 +404,12 @@ def main() -> None:
         raise SystemExit("--limit must be positive")
     if args.live and args.limit > 20:
         parser.error("--live is limited to at most 20 examples")
-    manifest, _ = verify_dataset(Path("data/golden/golden_set.csv"), args.manifest)
-    records = load_jsonl(args.input)[:args.limit]
+    manifest, dataset_rows = verify_dataset(
+        Path("data/golden/golden_set.csv"), args.manifest
+    )
+    records = hydrate_customer_text(
+        load_jsonl(args.input)[:args.limit], dataset_rows
+    )
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     run_dir = Path("reports/evaluation/runs")
     if args.live:
@@ -427,6 +457,7 @@ def main() -> None:
         "working_tree_dirty": dirty,
         "dataset_version": manifest["dataset_version"],
         "dataset_sha256": manifest["sha256"],
+        "dataset_manifest_sha256": sha256_file(args.manifest),
         "dataset_provenance_status": manifest["provenance_status"],
         "evaluation_schema_version": "assistly-evaluation-schema-v2",
         "evaluator_version": JUDGE_RUBRIC_VERSION,

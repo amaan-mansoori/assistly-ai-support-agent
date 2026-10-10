@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+import re
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,12 +15,18 @@ from uuid import uuid4
 
 from sklearn.metrics import confusion_matrix, f1_score
 
-from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
+from src.evaluation.dataset_manifest import (
+    DEFAULT_MANIFEST,
+    sha256_file,
+    verify_dataset,
+)
 from src.evaluation.evaluate_integrated_agent import _git_revision, _working_tree_dirty
 
 SAMPLE_VERSION = "assistly-human-subset-v1"
 ANNOTATION_VERSION = "assistly-human-annotation-v2"
 ADJUDICATION_VERSION = "assistly-human-adjudication-v1"
+HUMAN_EVALUATOR_VERSION = "human-grounded-evaluator-v2"
+HUMAN_EVALUATION_SCHEMA_VERSION = "assistly-human-evaluation-schema-v2"
 DEFAULT_SAMPLE = Path("reports/evaluation/human_annotation_sample_v1.json")
 DEFAULT_ANNOTATIONS = Path("reports/evaluation/human_annotations_v2.jsonl")
 INTENTS = (
@@ -61,6 +68,14 @@ GROUNDEDNESS = {
     "not_assessed",
 }
 CLAIM_DETECTION = {"yes", "no", "uncertain", "not_assessed"}
+EXCLUSION_VERSION = "assistly-human-exclusion-v1"
+EXCLUSION_REASONS = {
+    "source_unavailable",
+    "source_unreadable",
+    "duplicate_example",
+    "privacy_review",
+    "other",
+}
 LABEL_FIELDS = (
     "expected_intent",
     "evidence_sufficiency",
@@ -81,6 +96,13 @@ FINAL_LABEL_FIELDS = (
 
 class AnnotationError(ValueError):
     """Raised when an annotation artifact is invalid or incompatible."""
+
+
+def _is_pseudonymous_identifier(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", value) is not None
+    )
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -171,9 +193,12 @@ def load_sample(path: Path = DEFAULT_SAMPLE) -> dict[str, Any]:
 def create_annotation_template(
     sample: Mapping[str, Any], annotator_id: str
 ) -> list[dict[str, Any]]:
-    annotator = annotator_id.strip()
-    if not annotator:
-        raise AnnotationError("annotator_id must be a non-empty pseudonymous ID")
+    if not _is_pseudonymous_identifier(annotator_id):
+        raise AnnotationError(
+            "annotator_id must be a pseudonymous ID using letters, digits, "
+            "periods, underscores, or hyphens"
+        )
+    annotator = annotator_id
     return [
         {
             "annotation_version": ANNOTATION_VERSION,
@@ -226,7 +251,9 @@ def validate_annotation_records(
             raise AnnotationError(f"record {index}: frozen dataset identity mismatch")
         if not isinstance(example_id, str) or example_id not in expected_ids:
             raise AnnotationError(f"record {index}: example_id is not in the sample")
-        if not isinstance(annotator_id, str) or not annotator_id.strip():
+        if not isinstance(annotator_id, str):
+            raise AnnotationError(f"record {index}: pseudonymous annotator_id is required")
+        if not _is_pseudonymous_identifier(annotator_id):
             raise AnnotationError(f"record {index}: pseudonymous annotator_id is required")
         pair = (example_id, annotator_id)
         if pair in seen:
@@ -335,10 +362,25 @@ def validate_annotation_records(
                 "sufficient", "insufficient", "conflicting"
             }
             or record["expected_escalation"] not in {"escalate", "auto_handle"}
+            or record["unsupported_claim_allowed"] not in {"yes", "no"}
+            or not criteria
         ):
             raise AnnotationError(
                 f"record {index}: annotated records require definitive intent, "
-                "sufficiency, and escalation labels"
+                "sufficiency, escalation, unsupported-claim, and answer criteria"
+            )
+        if record["annotation_status"] == "not_annotated" and (
+            record["expected_intent"] != "not_annotated"
+            or record["relevant_evidence_ids"]
+            or relevance_scores
+            or record["evidence_sufficiency"] != "not_annotated"
+            or record["expected_escalation"] != "not_annotated"
+            or record["acceptable_answer_criteria"]
+            or record["unsupported_claim_allowed"] != "not_annotated"
+            or assessments
+        ):
+            raise AnnotationError(
+                f"record {index}: not_annotated records must not contain labels"
             )
         result.append(record)
     return result
@@ -407,12 +449,12 @@ def validate_adjudication_records(
         seen.add(example_id)
         adjudicator = record.get("adjudicator_id")
         sources = record.get("source_annotator_ids")
-        if not isinstance(adjudicator, str) or not adjudicator.strip():
+        if not _is_pseudonymous_identifier(adjudicator):
             raise AnnotationError(f"adjudication {index}: adjudicator_id is required")
         if (
             not isinstance(sources, list)
             or len(sources) < 2
-            or any(not isinstance(item, str) or not item.strip() for item in sources)
+            or any(not _is_pseudonymous_identifier(item) for item in sources)
             or len(sources) != len(set(sources))
             or adjudicator in sources
         ):
@@ -445,6 +487,135 @@ def validate_adjudication_records(
         validate_annotation_records([annotation], sample)
         validated.append(record)
     return validated
+
+
+def validate_exclusion_records(
+    records: Iterable[Mapping[str, Any]],
+    sample: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    """Validate sample exclusions as separate, privacy-minimized decisions."""
+    expected_ids = set(sample["example_ids"])
+    seen: set[str] = set()
+    validated = []
+    allowed_fields = {
+        "exclusion_version",
+        "dataset_version",
+        "dataset_sha256",
+        "example_id",
+        "excluded_by",
+        "reason",
+        "status",
+    }
+    for index, source in enumerate(records, 1):
+        record = dict(source)
+        if set(record) != allowed_fields:
+            raise AnnotationError(f"exclusion {index}: fields do not match schema")
+        example_id = record.get("example_id")
+        if (
+            record.get("exclusion_version") != EXCLUSION_VERSION
+            or record.get("dataset_version") != sample["dataset_version"]
+            or record.get("dataset_sha256") != sample["dataset_sha256"]
+        ):
+            raise AnnotationError(f"exclusion {index}: dataset identity mismatch")
+        if not isinstance(example_id, str) or example_id not in expected_ids:
+            raise AnnotationError(f"exclusion {index}: example_id is not in the sample")
+        if example_id in seen:
+            raise AnnotationError(f"duplicate exclusion for {example_id!r}")
+        seen.add(example_id)
+        excluded_by = record.get("excluded_by")
+        if not _is_pseudonymous_identifier(excluded_by):
+            raise AnnotationError(f"exclusion {index}: pseudonymous excluded_by is required")
+        if record.get("reason") not in EXCLUSION_REASONS:
+            raise AnnotationError(f"exclusion {index}: invalid reason")
+        if record.get("status") != "excluded":
+            raise AnnotationError(f"exclusion {index}: status must be excluded")
+        validated.append(record)
+    return validated
+
+
+def create_exclusion_record(
+    sample: Mapping[str, Any],
+    example_id: str,
+    excluded_by: str,
+    reason: str,
+) -> dict[str, Any]:
+    record = {
+        "exclusion_version": EXCLUSION_VERSION,
+        "dataset_version": sample["dataset_version"],
+        "dataset_sha256": sample["dataset_sha256"],
+        "example_id": example_id,
+        "excluded_by": excluded_by,
+        "reason": reason,
+        "status": "excluded",
+    }
+    return validate_exclusion_records([record], sample)[0]
+
+
+def summarize_annotation_coverage(
+    sample: Mapping[str, Any],
+    annotations: Iterable[Mapping[str, Any]],
+    adjudications: Iterable[Mapping[str, Any]] = (),
+    exclusions: Iterable[Mapping[str, Any]] = (),
+) -> dict[str, Any]:
+    """Report per-example workflow state without promoting submissions to truth."""
+    annotation_records = validate_annotation_records(annotations, sample)
+    adjudication_records = validate_adjudication_records(
+        adjudications, sample, annotation_records
+    )
+    exclusion_records = validate_exclusion_records(exclusions, sample)
+    annotations_by_id: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for record in annotation_records:
+        annotations_by_id[record["example_id"]].append(record)
+    adjudicated_ids = {
+        record["example_id"]
+        for record in adjudication_records
+        if record["adjudication_status"] == "adjudicated"
+    }
+    excluded_ids = {record["example_id"] for record in exclusion_records}
+    overlap = adjudicated_ids & excluded_ids
+    if overlap:
+        raise AnnotationError(
+            f"examples cannot be both adjudicated and excluded: {sorted(overlap)}"
+        )
+
+    states: dict[str, str] = {}
+    for example_id in sample["example_ids"]:
+        records = annotations_by_id.get(example_id, [])
+        if example_id in excluded_ids:
+            state = "excluded"
+        elif example_id in adjudicated_ids:
+            state = "adjudicated"
+        elif any(row["annotation_status"] == "annotated" for row in records):
+            state = (
+                "annotated_pending_adjudication"
+                if all(row["annotation_status"] == "annotated" for row in records)
+                else "partially_annotated"
+            )
+        elif any(row["annotation_status"] == "uncertain" for row in records):
+            state = "partially_annotated"
+        else:
+            state = "unannotated"
+        states[example_id] = state
+    counts = dict(Counter(states.values()))
+    return {
+        "sample_version": sample["sample_version"],
+        "dataset_version": sample["dataset_version"],
+        "dataset_sha256": sample["dataset_sha256"],
+        "sample_size": len(sample["example_ids"]),
+        "annotation_records": len(annotation_records),
+        "adjudication_records": len(adjudication_records),
+        "exclusion_records": len(exclusion_records),
+        "status_counts": counts,
+        "examples": [
+            {"example_id": example_id, "status": states[example_id]}
+            for example_id in sample["example_ids"]
+        ],
+        "human_ground_truth_count": counts.get("adjudicated", 0),
+        "note": (
+            "Annotation submissions are not ground truth; only valid adjudicated "
+            "records count as human ground truth. Exclusions are reported separately."
+        ),
+    }
 
 
 def cohen_kappa(first: list[str], second: list[str]) -> float | None:
@@ -707,7 +878,11 @@ def evaluate_human_grounded_run(
     expected_intents: list[str] = []
     predicted_intents: list[str] = []
     relevance_values = {1: [], 3: [], 5: []}
+    ndcg_values = {1: [], 3: [], 5: []}
     reciprocal_ranks: list[float] = []
+    retrieval_eligible_count = 0
+    retrieval_failed_count = 0
+    retrieval_output_count = 0
     sufficiency_truth, sufficiency_predicted = [], []
     sufficiency_expected_count = 0
     sufficiency_observed_count = 0
@@ -726,14 +901,30 @@ def evaluate_human_grounded_run(
             predicted_intents.append(
                 predicted if isinstance(predicted, str) else "missing_prediction"
             )
-        relevance_ids = set(truth["relevant_evidence_ids"])
-        retrieved = result.get("evidence_source_ids", [])
-        if not isinstance(retrieved, list):
-            retrieved = []
-        if relevance_ids and "evidence_source_ids" in result:
+        relevance_scores = {
+            item["evidence_id"]: item["score"]
+            for item in truth["evidence_relevance"]
+        }
+        relevance_ids = {
+            evidence_id for evidence_id, score in relevance_scores.items()
+            if score > 0
+        }
+        retrieved_value = result.get("evidence_source_ids")
+        retrieval_output_valid = isinstance(retrieved_value, list) and all(
+            isinstance(item, str) and item for item in retrieved_value
+        )
+        retrieved = retrieved_value if retrieval_output_valid else []
+        if len(retrieved) != len(set(retrieved)):
+            raise AnnotationError(
+                f"run result for {example_id!r} has duplicate evidence IDs"
+            )
+        retrieval_output_count += int(retrieval_output_valid)
+        if relevance_ids:
+            retrieval_eligible_count += 1
+            retrieval_failed_count += int(not retrieval_output_valid)
             for k in relevance_values:
                 relevance_values[k].append(
-                    int(bool(relevance_ids & set(retrieved[:k])))
+                    len(relevance_ids & set(retrieved[:k])) / len(relevance_ids)
                 )
             rank = next(
                 (index for index, evidence_id in enumerate(retrieved, 1)
@@ -741,6 +932,18 @@ def evaluate_human_grounded_run(
                 None,
             )
             reciprocal_ranks.append(1 / rank if rank else 0.0)
+            for k in ndcg_values:
+                dcg = sum(
+                    (2 ** relevance_scores.get(evidence_id, 0) - 1)
+                    / math.log2(rank_index + 1)
+                    for rank_index, evidence_id in enumerate(retrieved[:k], 1)
+                )
+                ideal_grades = sorted(relevance_scores.values(), reverse=True)[:k]
+                ideal_dcg = sum(
+                    (2 ** grade - 1) / math.log2(rank_index + 1)
+                    for rank_index, grade in enumerate(ideal_grades, 1)
+                )
+                ndcg_values[k].append(dcg / ideal_dcg if ideal_dcg else 0.0)
         expected_sufficiency = truth["evidence_sufficiency"]
         observed_sufficiency = result.get("evidence_status")
         if expected_sufficiency in {"sufficient", "insufficient", "conflicting"}:
@@ -810,7 +1013,7 @@ def evaluate_human_grounded_run(
                 "expected_escalation": expected_escalation,
                 "decision": decision,
                 "failure_category": category,
-                "evaluator_version": "human-grounded-evaluator-v1",
+                "evaluator_version": HUMAN_EVALUATOR_VERSION,
             })
 
     def ratio(
@@ -884,6 +1087,31 @@ def evaluate_human_grounded_run(
                 if reciprocal_ranks else "not_measured_no_adjudicated_relevant_evidence"
             ),
         },
+        "retrieval_ndcg_at_k": {
+            str(k): {
+                "value": mean(values) if values else None,
+                "denominator": len(values),
+                "denominator_unit": (
+                    "adjudicated examples with positive judged evidence"
+                ),
+                "status": (
+                    "measured_independent_graded_evidence_relevance"
+                    if values else "not_measured_no_adjudicated_graded_evidence"
+                ),
+            }
+            for k, values in ndcg_values.items()
+        },
+        "retrieval_output_coverage": {
+            "value": (
+                (retrieval_eligible_count - retrieval_failed_count)
+                / retrieval_eligible_count
+                if retrieval_eligible_count else None
+            ),
+            "eligible_examples": retrieval_eligible_count,
+            "evaluated_examples": retrieval_eligible_count - retrieval_failed_count,
+            "failed_examples": retrieval_failed_count,
+            "status": "measured" if retrieval_eligible_count else "not_measured",
+        },
         "evidence_sufficiency_accuracy": ratio(
             sum(a == b for a, b in zip(sufficiency_truth, sufficiency_predicted)),
             len(sufficiency_truth),
@@ -951,7 +1179,7 @@ def evaluate_human_grounded_run(
     }
     report = {
         "evaluation": "human_grounded_system_evaluation",
-        "evaluator_version": "human-grounded-evaluator-v1",
+        "evaluator_version": HUMAN_EVALUATOR_VERSION,
         "annotation_version": ANNOTATION_VERSION,
         "adjudication_version": ADJUDICATION_VERSION,
         "run_metadata": {
@@ -962,11 +1190,15 @@ def evaluate_human_grounded_run(
             "working_tree_dirty": _working_tree_dirty(),
             "dataset_version": sample["dataset_version"],
             "dataset_sha256": sample["dataset_sha256"],
+            "dataset_manifest_sha256": sha256_file(DEFAULT_MANIFEST),
             "dataset_provenance_status": sample["dataset_provenance_status"],
-            "evaluation_schema_version": "assistly-human-evaluation-schema-v1",
-            "evaluator_version": "human-grounded-evaluator-v1",
+            "evaluation_schema_version": HUMAN_EVALUATION_SCHEMA_VERSION,
+            "evaluator_version": HUMAN_EVALUATOR_VERSION,
             "prompt_version": run_metadata.get("prompt_version", "not_applicable"),
             "retrieval_version": run_metadata.get("retrieval_version", "not_applicable"),
+            "evidence_policy_version": run_metadata.get(
+                "evidence_policy_version", "not_applicable"
+            ),
             "retrieval_backend": run_metadata.get("retrieval_backend", "not_applicable"),
             "run_mode": run_metadata.get("run_mode", "not_available"),
             "provider": run_metadata.get("provider", "not_available"),
@@ -981,6 +1213,16 @@ def evaluate_human_grounded_run(
             "run_id": run_metadata.get("run_id"),
             "examples_evaluated": len(joined),
             "adjudicated_examples": len(final_records),
+            "sample_examples": len(sample["example_ids"]),
+            "eligible_retrieval_examples": retrieval_eligible_count,
+            "retrieval_output_examples": retrieval_output_count,
+            "failed_retrieval_examples": retrieval_failed_count,
+            "unadjudicated_examples": max(
+                0, len(sample["example_ids"]) - len(final_records)
+            ),
+            "labeled_without_positive_relevance_examples": (
+                len(final_records) - retrieval_eligible_count
+            ),
             "ground_truth_source": "human_adjudication",
         },
         "metrics": metric_results,
@@ -1108,18 +1350,23 @@ def _human_failure_category(
             if result["error_category"] == "malformed_model_output"
             else "provider_failure"
         )
+    if expected_intent == "other_unclear":
+        return "ambiguous_query"
     if predicted_intent in {None, "other_unclear"} and expected_intent != "other_unclear":
         return "ambiguous_intent"
     if predicted_intent != expected_intent:
         return "wrong_intent"
     relevant_ids = set(labels["relevant_evidence_ids"])
     retrieved = result.get("evidence_source_ids", [])
+    if "evidence_source_ids" in result and relevant_ids:
+        retrieved_ids = set(retrieved) if isinstance(retrieved, list) else set()
+        if not (relevant_ids & retrieved_ids):
+            return "missing_evidence" if not retrieved_ids else "retrieval_mismatch"
     if (
-        "evidence_source_ids" in result
-        and relevant_ids
-        and not (relevant_ids & set(retrieved or []))
+        labels["evidence_sufficiency"] in {"insufficient", "conflicting"}
+        and result.get("evidence_status") == "sufficient"
     ):
-        return "retrieval_mismatch"
+        return "insufficient_context"
     expected_escalation = labels["expected_escalation"]
     if expected_escalation in {"escalate", "auto_handle"}:
         actual = result.get("decision")
@@ -1127,11 +1374,6 @@ def _human_failure_category(
             return "missing_escalation"
         if expected_escalation == "auto_handle" and actual == "escalate":
             return "incorrect_escalation"
-    if (
-        labels["evidence_sufficiency"] in {"insufficient", "conflicting"}
-        and result.get("evidence_status") == "sufficient"
-    ):
-        return "insufficient_evidence"
     if assessment.get("run_id") == run_id:
         if assessment.get("unsupported_claim_detected") == "yes":
             return "unsupported_claim"
@@ -1152,9 +1394,27 @@ def main() -> int:
     template_parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
     template_parser.add_argument("--annotator-id", required=True)
     template_parser.add_argument("--output", type=Path, required=True)
+    template_parser.add_argument("--overwrite", action="store_true")
+    merge_parser = commands.add_parser("merge")
+    merge_parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
+    merge_parser.add_argument("--annotations", type=Path, nargs="+", required=True)
+    merge_parser.add_argument("--output", type=Path, required=True)
+    merge_parser.add_argument("--overwrite", action="store_true")
+    exclusion_parser = commands.add_parser("exclude")
+    exclusion_parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
+    exclusion_parser.add_argument("--example-id", required=True)
+    exclusion_parser.add_argument("--excluded-by", required=True)
+    exclusion_parser.add_argument("--reason", choices=sorted(EXCLUSION_REASONS), required=True)
+    exclusion_parser.add_argument("--output", type=Path, required=True)
     validate_parser = commands.add_parser("validate")
     validate_parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
     validate_parser.add_argument("--annotations", type=Path, required=True)
+    coverage_parser = commands.add_parser("coverage")
+    coverage_parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
+    coverage_parser.add_argument("--annotations", type=Path, required=True)
+    coverage_parser.add_argument("--adjudications", type=Path)
+    coverage_parser.add_argument("--exclusions", type=Path)
+    coverage_parser.add_argument("--output", type=Path)
     agreement_parser = commands.add_parser("agreement")
     agreement_parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
     agreement_parser.add_argument("--annotations", type=Path, required=True)
@@ -1192,6 +1452,11 @@ def main() -> int:
     else:
         sample = load_sample(args.sample)
         if args.command == "create-template":
+            if args.output.exists() and not args.overwrite:
+                raise AnnotationError(
+                    f"refusing to overwrite existing annotation file: {args.output}; "
+                    "pass --overwrite only when replacement is intentional"
+                )
             records = create_annotation_template(sample, args.annotator_id)
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(
@@ -1202,6 +1467,51 @@ def main() -> int:
                 "template_rows": len(records),
                 "annotation_status": "not_annotated",
                 "annotator_id": args.annotator_id,
+                "output": str(args.output),
+            }
+        elif args.command == "merge":
+            if args.output.exists() and not args.overwrite:
+                raise AnnotationError(
+                    f"refusing to overwrite existing merged annotations: {args.output}; "
+                    "pass --overwrite only when replacement is intentional"
+                )
+            submissions = [
+                record
+                for annotation_path in args.annotations
+                for record in _read_jsonl(annotation_path)
+            ]
+            records = validate_annotation_records(submissions, sample)
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                "".join(json.dumps(row) + "\n" for row in records),
+                encoding="utf-8",
+            )
+            report = {
+                "valid": True,
+                "submission_files": len(args.annotations),
+                "annotation_records": len(records),
+                "annotator_count": len({row["annotator_id"] for row in records}),
+                "output": str(args.output),
+                "human_metrics": "not computed by merge",
+            }
+        elif args.command == "exclude":
+            existing = (
+                _read_jsonl(args.output) if args.output.exists() else []
+            )
+            record = create_exclusion_record(
+                sample, args.example_id, args.excluded_by, args.reason
+            )
+            records = validate_exclusion_records([*existing, record], sample)
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                "".join(json.dumps(row) + "\n" for row in records),
+                encoding="utf-8",
+            )
+            report = {
+                "status": "excluded",
+                "exclusion_records": len(records),
+                "example_id": args.example_id,
+                "reason": args.reason,
                 "output": str(args.output),
             }
         elif args.command == "validate":
@@ -1217,6 +1527,21 @@ def main() -> int:
                 "annotator_count": len({row["annotator_id"] for row in records}),
                 "human_metrics": "not computed by validation",
             }
+        elif args.command == "coverage":
+            annotations = _read_jsonl(args.annotations)
+            adjudications = (
+                _read_jsonl(args.adjudications)
+                if args.adjudications else []
+            )
+            exclusions = _read_jsonl(args.exclusions) if args.exclusions else []
+            report = summarize_annotation_coverage(
+                sample, annotations, adjudications, exclusions
+            )
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(
+                    json.dumps(report, indent=2) + "\n", encoding="utf-8"
+                )
         elif args.command == "agreement":
             report = analyze_annotations(_read_jsonl(args.annotations), sample)
             args.output.parent.mkdir(parents=True, exist_ok=True)

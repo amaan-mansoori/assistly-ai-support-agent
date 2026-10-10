@@ -57,6 +57,27 @@ def test_conflicting_refund_outcomes_are_detected_as_heuristic_conflict():
     assert assessment.resolution_match_status == "heuristic_conflict_detected"
 
 
+def test_opposite_outcomes_on_unrelated_topics_are_not_a_conflict():
+    assessment = assess_evidence(
+        (
+            _evidence(
+                "My refund is missing.",
+                "Your refund was processed.",
+            ),
+            _evidence(
+                "My refund is missing.",
+                "Your refund issue was noted; your package failed inspection.",
+                0.8,
+            ),
+        ),
+        minimum_similarity=0.1,
+        expected_intent="return_refund",
+    )
+
+    assert assessment.status == "sufficient"
+    assert not assessment.evidence_conflict
+
+
 def test_wrong_intent_evidence_does_not_pass_the_gate():
     assessment = assess_evidence(
         (

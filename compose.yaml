@@ -47,7 +47,7 @@ services:
       HYBRID_LEXICAL_WEIGHT: ${HYBRID_LEXICAL_WEIGHT:-0.5}
       HYBRID_SEMANTIC_WEIGHT: ${HYBRID_SEMANTIC_WEIGHT:-0.5}
       SUPPORT_AGENT_PROVIDER: ${SUPPORT_AGENT_PROVIDER:-gemini}
-      SUPPORT_AGENT_MODEL: ${SUPPORT_AGENT_MODEL:-gemini-2.0-flash}
+      SUPPORT_AGENT_MODEL: ${SUPPORT_AGENT_MODEL:-gemini-3.8-flash}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     command: ["sh", "-c", "alembic upgrade head && uvicorn src.api.main:app --host 0.0.0.0 --port 8000"]

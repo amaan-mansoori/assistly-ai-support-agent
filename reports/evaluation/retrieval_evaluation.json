@@ -1,6 +1,15 @@
 {
+  "evaluation_mode": "heuristic_proxy",
+  "evaluator_version": "retrieval-intent-proxy-v2",
+  "run_timestamp_utc": "2026-10-09T05:57:02.400353+00:00",
+  "dataset_version": "assistly-golden-220-v1",
+  "dataset_sha256": "2a80bd3cafee26ef8a4cc665b9212a33eae4d08e12a808f9e0cfdce00b523b81",
+  "dataset_provenance_status": "unresolved_provisional",
   "retrieval_corpus_size": 152535,
+  "eligible_examples": 220,
   "golden_examples_evaluated": 220,
+  "failed_examples": 0,
+  "excluded_examples": 0,
   "excluded_golden_ids": 220,
   "excluded_exact_text_duplicates": 2221,
   "embedding_model": "sklearn-tfidf-word-unigram-bigram",
@@ -9,5 +18,6 @@
   "intent-match@1": 0.3181818181818182,
   "intent-match@3": 0.4863636363636364,
   "intent-match@5": 0.5681818181818182,
-  "training_label_limitation": "Retrieved intent labels are derived by the existing deterministic heuristic, not human labels."
+  "metric_definition": "intent-match@k is a heuristic proxy against provisional reference intent labels; it is not independently judged retrieval relevance.",
+  "training_label_limitation": "Retrieved intent labels are derived by the existing deterministic heuristic. Golden reference labels have unresolved provisional provenance."
 }

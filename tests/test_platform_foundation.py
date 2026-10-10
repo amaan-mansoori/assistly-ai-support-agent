@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 from src.api.main import create_app
 from src.db.database import Base, make_engine, make_session_factory
@@ -74,4 +75,19 @@ def test_sqlalchemy_schema_creates_with_relational_constraints(tmp_path):
             assert session.execute(text("SELECT 1")).scalar_one() == 1
     finally:
         Base.metadata.drop_all(engine)
+        engine.dispose()
+
+
+def test_database_errors_do_not_include_bound_parameter_values(tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'redacted-errors.sqlite'}")
+    sensitive_marker = "synthetic-private-audit-marker"
+    try:
+        with pytest.raises(OperationalError) as error:
+            with engine.connect() as connection:
+                connection.execute(
+                    text("SELECT secret_column FROM missing_table WHERE value = :value"),
+                    {"value": sensitive_marker},
+                )
+        assert sensitive_marker not in str(error.value)
+    finally:
         engine.dispose()

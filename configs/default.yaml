@@ -32,7 +32,7 @@ retrieval:
 agent:
   # LLM provider: "openai" or "gemini"
   llm_provider: "gemini"
-  model_name: "gemini-2.0-flash"
+  model_name: "gemini-3.8-flash"
   provider_timeout_seconds: 30
   provider_max_retries: 2
   history_window: 12
@@ -53,5 +53,5 @@ evaluation:
     - "escalation_recall"
   # LLM judge settings
   judge:
-    model_name: "gemini-2.0-flash"
+    model_name: "gemini-3.8-flash"
     num_human_comparison_samples: 50

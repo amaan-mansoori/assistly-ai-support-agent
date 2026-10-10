@@ -196,34 +196,45 @@ _WORD = re.compile(r"[a-z]+")
 
 def _has_conflicting_resolutions(evidence: tuple[AgentEvidence, ...]) -> bool:
     for index, first in enumerate(evidence):
-        first_words = set(_WORD.findall(first.support_response.lower()))
+        first_polarities = _topic_outcome_polarities(first.support_response)
         for second in evidence[index + 1:]:
-            second_words = set(_WORD.findall(second.support_response.lower()))
-            shared_topics = (first_words & second_words) & _OUTCOME_TOPICS
-            if not shared_topics:
-                continue
-            first_polarity = _outcome_polarity(first.support_response)
-            second_polarity = _outcome_polarity(second.support_response)
-            if first_polarity in {"positive", "negative"} and (
-                second_polarity in {"positive", "negative"}
-                and first_polarity != second_polarity
+            second_polarities = _topic_outcome_polarities(second.support_response)
+            if any(
+                first_polarities.get(topic) in {"positive", "negative"}
+                and second_polarities.get(topic) in {"positive", "negative"}
+                and first_polarities[topic] != second_polarities[topic]
+                for topic in first_polarities.keys() & second_polarities.keys()
             ):
                 return True
     return False
 
 
-def _outcome_polarity(text: str) -> str | None:
+def _topic_outcome_polarities(text: str) -> dict[str, str | None]:
     words = _WORD.findall(text.lower())
-    positive = False
-    negative = bool(set(words) & _NEGATIVE_OUTCOMES)
+    outcomes: dict[str, set[str]] = {}
+    topic_positions = [
+        (index, word) for index, word in enumerate(words)
+        if word in _OUTCOME_TOPICS
+    ]
     for index, word in enumerate(words):
-        if word not in _POSITIVE_OUTCOMES:
+        if word not in _POSITIVE_OUTCOMES | _NEGATIVE_OUTCOMES:
             continue
+        nearby_topics = [
+            (abs(index - topic_index), topic)
+            for topic_index, topic in topic_positions
+            if abs(index - topic_index) <= 4
+        ]
+        if not nearby_topics:
+            continue
+        _, topic = min(nearby_topics)
         preceding = set(words[max(0, index - 2):index])
-        if preceding & _NEGATIONS:
-            negative = True
-        else:
-            positive = True
-    if positive == negative:
-        return None
-    return "positive" if positive else "negative"
+        polarity = (
+            "negative"
+            if word in _NEGATIVE_OUTCOMES or preceding & _NEGATIONS
+            else "positive"
+        )
+        outcomes.setdefault(topic, set()).add(polarity)
+    return {
+        topic: next(iter(polarities)) if len(polarities) == 1 else None
+        for topic, polarities in outcomes.items()
+    }

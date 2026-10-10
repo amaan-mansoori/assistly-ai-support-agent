@@ -38,6 +38,8 @@
     "annotator_id": {
       "type": "string",
       "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
       "description": "Use a pseudonymous identifier; do not store a real name or email."
     },
     "annotation_status": {
@@ -181,5 +183,87 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "annotation_status": {
+            "const": "annotated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "expected_intent": {
+            "not": {
+              "enum": [
+                "uncertain",
+                "not_annotated"
+              ]
+            }
+          },
+          "evidence_sufficiency": {
+            "enum": [
+              "sufficient",
+              "insufficient",
+              "conflicting"
+            ]
+          },
+          "expected_escalation": {
+            "enum": [
+              "escalate",
+              "auto_handle"
+            ]
+          },
+          "acceptable_answer_criteria": {
+            "minItems": 1
+          },
+          "unsupported_claim_allowed": {
+            "enum": [
+              "yes",
+              "no"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "annotation_status": {
+            "const": "not_annotated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "expected_intent": {
+            "const": "not_annotated"
+          },
+          "relevant_evidence_ids": {
+            "maxItems": 0
+          },
+          "evidence_relevance": {
+            "maxItems": 0
+          },
+          "evidence_sufficiency": {
+            "const": "not_annotated"
+          },
+          "expected_escalation": {
+            "const": "not_annotated"
+          },
+          "acceptable_answer_criteria": {
+            "maxItems": 0
+          },
+          "unsupported_claim_allowed": {
+            "const": "not_annotated"
+          },
+          "response_assessments": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ]
 }

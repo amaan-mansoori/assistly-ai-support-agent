@@ -7,12 +7,16 @@ semantic vocabulary more robustly than exact keyword matching alone.
 
 The golden set was held out by customer tweet ID and exact normalized customer
 text. `intent-match@k` measures whether any top-k historical message has the
-same intent as the human-reviewed golden label. It does **not** prove response
-quality. Historical intents are heuristic/pseudo-labels from the existing local
-taxonomy, while golden labels are human-reviewed.
+same intent as the provisional reference label. This is a **heuristic proxy**,
+not independently judged retrieval relevance and not proof of response quality.
+Historical intents are heuristic/pseudo-labels; the frozen golden label
+provenance remains unresolved and provisional.
 
 - Corpus size: **152535**
 - Golden examples: **220**
+- Dataset SHA-256: **2a80bd3cafee26ef8a4cc665b9212a33eae4d08e12a808f9e0cfdce00b523b81**
+- Dataset provenance: **unresolved_provisional**
+- Metric class: **heuristic_proxy**
 - Retrieval representation: **sklearn-tfidf-word-unigram-bigram**
 - Excluded golden IDs: **220**
 - Excluded exact-text duplicates: **2221**
@@ -22,4 +26,6 @@ taxonomy, while golden labels are human-reviewed.
 - Intent-match@3: **0.486364**
 - Intent-match@5: **0.568182**
 
-Weak retrieval diagnostics are in `retrieval_failure_examples.json`.
+Privacy-minimized retrieval failure identifiers are in
+`retrieval_failure_examples.json`; no query or historical message text is
+stored in the failure artifact.

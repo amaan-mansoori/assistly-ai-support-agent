@@ -158,6 +158,11 @@ signals without logging customer text. Candidate-count scope is reported
 because TF-IDF scores its full local corpus, while pgvector and hybrid expose
 only their fetched top-k candidate sets.
 
+The FastAPI platform uses `build_retriever` and honors
+`RETRIEVER_BACKEND`. The local `python -m src.agent` demo and
+`SupportAgent.from_repository` use the deterministic TF-IDF `HistoricalRetriever`
+directly; they do not use the optional FastEmbed backend.
+
 Evidence status distinguishes `none`, `weak`, `conflicting`, and `sufficient`.
 Sufficiency requires a candidate above the configured similarity floor, a
 nonempty support resolution, and (when historical customer text is present) a
@@ -208,15 +213,30 @@ applicable. Do not treat `--mock` output as a model evaluation.
 `src/agent/config.py` loads `configs/default.yaml`, then applies environment
 overrides. Secret keys are read from the environment (and `.env` for local
 development); never put secrets in YAML or source code. The runtime provider
-defaults to Gemini and the model defaults to `gemini-2.0-flash`; use
+defaults to Gemini and the model defaults to `gemini-3.8-flash`; use
 `SUPPORT_AGENT_PROVIDER=openai` with `OPENAI_API_KEY` and a
 `SUPPORT_AGENT_MODEL` accepted by the selected OpenAI-compatible endpoint to
 use that adapter. `SUPPORT_AGENT_MODEL` overrides the model. The CLI supports
 an alternate YAML file through `--config`.
 
-TF-IDF remains the reproducible baseline; pgvector/CPU FastEmbed semantic
-retrieval is optional. Retrieval conflict and grounding checks are intentionally
-heuristic, not production-grade factual verification or human relevance labels.
+TF-IDF is the default reproducible runtime backend. The FastAPI platform can
+select pgvector/CPU FastEmbed semantic or hybrid retrieval with
+`RETRIEVER_BACKEND=vector` or `hybrid`; the local core CLI remains TF-IDF.
+FastEmbed passes the configured `EMBEDDING_MODEL` to its query and passage
+encoders, while the PostgreSQL column and runtime vector validation are fixed
+at 384 dimensions. `BAAI/bge-small-en-v1.5` is the configured model; the
+FastEmbed model was not initialized during offline verification. The selected
+model must produce exactly 384 finite values. FastEmbed may load/download its
+model when the backend is initialized, so this is not an offline cold-start
+path.
+
+There is no automatic fallback from vector or hybrid mode to TF-IDF if
+FastEmbed, the model, PostgreSQL, or pgvector is unavailable. Retrieval
+exceptions after agent initialization fail closed to human review; backend
+initialization errors do not switch backends and may prevent agent creation.
+Select `RETRIEVER_BACKEND=tfidf` explicitly for the offline lexical backend.
+Retrieval conflict and grounding checks are intentionally heuristic, not
+production-grade factual verification or human relevance labels.
 Provider calls require network access and valid credentials; normal tests use
 injected mock providers and do not call external model APIs.
 
@@ -447,8 +467,28 @@ and embedding. Use a non-production database when validating ingestion.
 Run offline tests and Python lint checks:
 
 ```powershell
-python -m pytest -q
-ruff check --isolated --select E4,E7,E9,F821 src/agent src/api src/application src/db src/platform src/retrieval src/evaluation/evaluate_integrated_agent.py tests/test_agent_config.py tests/test_agent_context.py tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py tests/test_platform_api.py tests/test_platform_foundation.py tests/test_rate_limit.py tests/test_retrieval_backends.py tests/test_staff_provisioning.py tests/test_retention.py tests/test_phase5_quality.py tests/test_reply_generator.py tests/test_historical_retriever.py
+& .\.venv\Scripts\python.exe -m pytest -q
+& .\.venv\Scripts\ruff.exe check --isolated --select E4,E7,E9,F821 `
+  src/agent src/api src/application src/db src/platform src/retrieval `
+  src/evaluation/evaluate_integrated_agent.py `
+  src/evaluation/dataset_manifest.py src/evaluation/regression_gate.py `
+  src/evaluation/compare_baselines.py src/evaluation/human_grounded_evaluation.py `
+  src/evaluation/independent_retrieval_evaluation.py src/evaluation/llm_judge.py `
+  src/evaluation/run_simple_baseline.py src/evaluation/run_trivial_baseline.py `
+  tests/test_agent_config.py tests/test_agent_context.py `
+  tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py `
+  tests/test_evaluation_reporting.py tests/test_phase4_evaluation_controls.py `
+  tests/test_phase5_quality.py tests/test_phase6_human_evaluation.py `
+  tests/test_independent_retrieval_evaluation.py `
+  tests/test_reply_generator.py tests/test_historical_retriever.py `
+  tests/test_platform_api.py tests/test_platform_foundation.py `
+  tests/test_rate_limit.py tests/test_retrieval_backends.py `
+  tests/test_staff_provisioning.py tests/test_retention.py
+& .\.venv\Scripts\python.exe -m src.evaluation.regression_gate `
+  --baseline tests/fixtures/evaluation_baseline.json `
+  --candidate tests/fixtures/evaluation_candidate.json `
+  --thresholds configs/evaluation_regression_thresholds.json
+docker compose config --quiet
 ```
 
 The tests use fake AI and embedding providers; no paid API key is required.
@@ -461,6 +501,30 @@ dependencies with one explicit exception: NLTK 3.10.3 is the latest available
 release and is flagged by `PYSEC-2026-3740`; the vulnerable model-artifact APIs
 are not used. NLTK and evaluation-only packages are excluded from the backend
 runtime image. Revisit the exception when an upstream fix is available.
+
+### Independent retrieval relevance
+
+The historical retrieval `intent-match@k` figures are heuristic proxies, not
+human relevance metrics. A separate 50-query/250-candidate workflow is
+documented in
+[`reports/evaluation/independent_retrieval_evaluation.md`](reports/evaluation/independent_retrieval_evaluation.md).
+It exports two blank reviewer files, validates them against the frozen query
+and retrieval artifact, requires adjudication for disagreements, and only then
+computes Recall@1/3/5, MRR, and graded nDCG@1/3/5. Export refuses to replace
+existing files:
+
+```powershell
+& .\.venv\Scripts\python.exe -m src.evaluation.retrieval_relevance_workflow export
+& .\.venv\Scripts\python.exe -m src.evaluation.retrieval_relevance_workflow validate `
+  --submission reports\evaluation\human_annotation_exports\retrieval-relevance-reviewer-01.jsonl
+& .\.venv\Scripts\python.exe -m src.evaluation.retrieval_relevance_workflow validate `
+  --submission reports\evaluation\human_annotation_exports\retrieval-relevance-reviewer-02.jsonl
+```
+
+After both independent review files are complete, adjudicate and evaluate with
+the exact commands and optional exclusion handling in the linked protocol.
+Currently the templates are blank and independent retrieval metrics are
+**NOT MEASURED**.
 
 Historical component benchmarks below remain distinct from the integrated
 runtime harness. To run an offline deterministic evaluation, prepare the local
@@ -567,9 +631,13 @@ than this runtime run's replies, and are not combined with runtime metrics.
 Machine-specific latency values remain in each ignored run artifact rather
 than being presented as general performance claims.
 
-Regression gates compare only runs with matching dataset hash/version,
-evaluation schema, evaluator, prompt, retrieval version, backend, configuration,
-and run mode. Thresholds are maintained in
+Regression gates compare only runs with matching dataset and manifest
+hash/version,
+evaluation schema, evaluator, prompt, retrieval version, evidence-policy
+version, backend, configuration, and run mode. The topic-aware evidence policy
+is versioned as `assistly-evidence-policy-v2`; the integrated evaluator is
+`integrated-evaluator-v4`. Older reports are intentionally incompatible with
+new runs. Thresholds are maintained in
 `configs/evaluation_regression_thresholds.json`; missing configured metrics or
 incompatible identities fail closed:
 
@@ -603,30 +671,62 @@ intent labels. The v2 submission and adjudication contracts are
 `reports/evaluation/adjudication_schema_v1.json`. No labels have been submitted
 for this subset and no human agreement or quality metric is available yet.
 
-Create a separate private file for each pseudonymous annotator:
+Create a separate file for each pseudonymous annotator. The template contains
+only stable example IDs and empty labels; use an approved, access-controlled
+review interface to view source examples and evidence rather than copying
+customer text into the annotation export. Existing output paths are protected
+from accidental replacement; pass `--overwrite` only when intentionally
+replacing a template or merged file:
 
 ```powershell
-python -m src.evaluation.human_grounded_evaluation create-template `
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation create-template `
+  --sample reports/evaluation/human_annotation_sample_v1.json `
   --annotator-id reviewer-01 `
   --output reports/evaluation/human_annotation_exports/reviewer-01.jsonl
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation create-template `
+  --sample reports/evaluation/human_annotation_sample_v1.json `
+  --annotator-id reviewer-02 `
+  --output reports/evaluation/human_annotation_exports/reviewer-02.jsonl
 ```
 
 Annotators independently label expected intent, evidence relevance
 (`0=irrelevant`, `1=partial`, `2=direct`), evidence sufficiency, expected
 escalation, acceptable-answer criteria, and unsupported-claim allowance.
-Run-specific response reviews are a `response_assessments` list, so a reviewer
+Each annotator edits their own export independently. Run-specific response reviews are a `response_assessments` list, so a reviewer
 can assess multiple systems for the same example without creating duplicate
 example/annotator records. Each assessment names its run ID and human labels
 answer quality, groundedness, and unsupported claims. The reviewed output must
 be presented to the annotator through an approved access-controlled channel;
 evaluation and failure artifacts do not store generated replies. Do not infer
-expected escalation from the agent's choice. Validate and measure agreement with:
+expected escalation from the agent's choice. Merge the independent exports,
+validate the combined records, and inspect workflow coverage:
 
 ```powershell
-python -m src.evaluation.human_grounded_evaluation validate `
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation merge `
+  --annotations reports/evaluation/human_annotation_exports/reviewer-01.jsonl `
+               reports/evaluation/human_annotation_exports/reviewer-02.jsonl `
+  --output reports/evaluation/human_annotation_exports/combined.jsonl
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation validate `
   --annotations reports/evaluation/human_annotation_exports/combined.jsonl
-python -m src.evaluation.human_grounded_evaluation agreement `
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation agreement `
   --annotations reports/evaluation/human_annotation_exports/combined.jsonl
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation coverage `
+  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
+  --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
+  --exclusions reports/evaluation/human_annotation_exports/exclusions.jsonl `
+  --output reports/evaluation/human_grounded_runs/annotation_coverage.json
+```
+
+If no adjudication or exclusion file exists yet, omit the corresponding option.
+Use `exclude` to append a privacy-minimized exclusion decision with a closed
+reason code; free-text customer notes and real names are not accepted:
+
+```powershell
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation exclude `
+  --example-id golden-set-0007 `
+  --excluded-by review-lead `
+  --reason source_unavailable `
+  --output reports/evaluation/human_annotation_exports/exclusions.jsonl
 ```
 
 For each example with at least two complete, independent submissions, an
@@ -634,7 +734,7 @@ adjudicator supplies a JSON object containing all `final_labels` fields from
 the adjudication schema and records it separately:
 
 ```powershell
-python -m src.evaluation.human_grounded_evaluation adjudicate `
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation adjudicate `
   --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
   --example-id golden-set-0007 `
   --adjudicator-id review-lead `
@@ -649,13 +749,38 @@ an adjudicator records final labels in a separate adjudication artifact.
 Incomplete, uncertain, and non-adjudicated records are not counted as
 ground-truth labels.
 
+The checked-in generated-reply artifact has been migrated to
+`assistly-reply-generation-v2`. It retains example IDs, provisional intent,
+support resolutions, retrieval metadata, and generated replies, but removes
+customer-message fields and customer identifiers. Exact source-message echoes,
+email addresses, common API-key formats, bearer tokens, and US-style phone
+numbers are redacted from retained free text. To sanitize a legacy artifact
+without replacing it, first write a separate copy and inspect its record count
+and privacy checks:
+
+```powershell
+& .\.venv\Scripts\python.exe -m src.evaluation.generate_golden_replies `
+  --sanitize-legacy `
+  --input reports/evaluation/golden_reply_generations.jsonl `
+  --output reports/evaluation/golden_reply_generations.sanitized.jsonl
+```
+
+Migration fails closed on malformed, duplicate, or incomplete records. The
+`--output` path defaults to the input only when omitted; use that only for an
+intentional, backed-up in-place migration. Reply-quality consumers continue to
+read the v2 record shape. The judge hydrates customer text from the verified
+frozen CSV in memory by example ID and does not write it to the judge artifacts.
+Offline grounding metric v2 counts only historical support replies as evidence;
+historical customer messages do not validate a generated answer. This remains
+a lexical diagnostic, not factual verification.
+
 To evaluate the three systems in an existing comparison against actual
 adjudications, use the command below. Runtime response reviews use the Assistly
 run ID; baseline review IDs are the comparison run ID suffixed with
 `:majority` or `:tfidf_logistic_regression`.
 
 ```powershell
-python -m src.evaluation.human_grounded_evaluation compare-systems `
+& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation compare-systems `
   --comparison reports/evaluation/runs/<run-id>.comparison.json `
   --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
   --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
@@ -670,9 +795,54 @@ labels or matching assessments stay `null`; token usage and estimated cost
 also stay unavailable unless provider responses actually expose the values.
 Each human report records the frozen-data identity, annotation sample hash,
 annotation/adjudication hashes, evaluator and prompt versions, backend,
-provider/model, mode, and example count. The regression gate rejects mismatched
-identities and supports an optional `minimum_denominator`; no human metric
-threshold is enabled until adjudicated data exists.
+provider/model, mode, and example count. the regression gate rejects mismatched identities and metric denominators. No
+human metric threshold is enabled until adjudicated data exists.
+
+#### Phase 7: Independent retrieval evaluation and integrity
+
+Privacy remediation and the Phase 8 evidence-policy changes are summarized in
+[`phase8_quality_notes.md`](reports/evaluation/phase8_quality_notes.md). The
+tracked generated-reply JSONL is now versioned and privacy-minimized; the
+frozen source CSV remains unchanged.
+
+The existing `python -m src.evaluation.evaluate_retrieval` report remains a
+taxonomy `intent-match@k` **heuristic proxy**, not retrieval relevance ground
+truth. Independent retrieval metrics are calculated separately by
+`src.evaluation.independent_retrieval_evaluation` and require adjudicated
+`evidence_relevance` scores. Use per-system JSONL rows containing only
+`example_id` and the ranked `evidence_source_ids` output (plus optional
+operational `evidence_status`) so every retriever is scored on the same
+adjudicated query set:
+
+```powershell
+& .\.venv\Scripts\python.exe -m src.evaluation.independent_retrieval_evaluation `
+  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
+  --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
+  --exclusions reports/evaluation/human_annotation_exports/exclusions.jsonl `
+  --run tfidf=reports/evaluation/human_annotation_exports/tfidf-ranked.jsonl `
+  --run hybrid=reports/evaluation/human_annotation_exports/hybrid-ranked.jsonl `
+  --output reports/evaluation/human_grounded_runs/retrieval.json `
+  --failures reports/evaluation/human_grounded_runs/retrieval-failures.json
+```
+
+Omit `--exclusions` if there is no exclusion file. Recall@K is macro query-level
+recall over judged-positive IDs; MRR uses the first judged-positive rank and
+nDCG uses relevance grades 1/2. A missing system row counts as a failed result
+and contributes zero for an otherwise eligible labeled query. Adjudicated
+examples with no positive relevance judgment and explicitly excluded examples
+are outside the retrieval denominator and counted separately. Unjudged corpus
+items are not assumed irrelevant. The evaluator records dataset, annotation,
+adjudication and exclusion hashes, and its output/failure artifacts contain
+identifiers and metrics only. If human annotations are absent, independent
+retrieval performance is **NOT MEASURED**.
+
+The current environment has no completed annotation/adjudication export. The
+frozen dataset's populated `human_intent` values remain provisional because
+their provenance is unresolved. Model-list discovery confirmed
+`models/gemini-3.8-flash` exposes `generateContent`; the last authorized single
+generation diagnostic returned sanitized HTTP 503 `UNAVAILABLE` (high demand).
+No 20-example live evaluation has been run; live-model quality remains
+**NOT MEASURED**. Phase 7 offline testing uses deterministic mocks only.
 
 Annotation exports, adjudications, human reports, and human failure summaries
 are Git-ignored. The new tracked manifest contains IDs only; no customer text,
@@ -682,7 +852,9 @@ runtime path: it is off by default, explicitly opt-in, capped at 20 examples,
 and uses `SUPPORT_AGENT_PROVIDER` (`gemini` or `openai`) plus
 `SUPPORT_AGENT_MODEL`, `SUPPORT_AGENT_TIMEOUT_SECONDS`, and
 `SUPPORT_AGENT_MAX_RETRIES`. Provider-specific rate limiting remains in the
-existing adapter. No live provider credentials were available during Phase 6 verification, so
+existing adapter. Earlier single-request smoke diagnostics confirmed model
+discovery but received sanitized HTTP 503 `UNAVAILABLE` on generation. The
+20-example live evaluation remains unrun and
 `LIVE_PROVIDER_EVAL = NOT RUN`. Historical heuristic, deterministic mock,
 human-grounded, and live-provider results remain separate classes.
 
@@ -750,12 +922,14 @@ python -m src.evaluation.run_simple_baseline
 python -m src.evaluation.evaluate_retrieval
 ```
 
-Regenerating missing model outputs is not an offline step. It requires a
-configured LLM provider; for the frozen Gemini-produced checkpoint use:
+Regenerating missing model outputs is not an offline step. The checked-in
+Gemini-produced checkpoint remains the source for the reported evaluation.
+Regeneration is a new run, not an exact reproduction of that checkpoint, and
+uses the current configured Gemini model:
 
 ```powershell
 $env:GEMINI_API_KEY="your-key"
-$env:SUPPORT_AGENT_MODEL="gemini-2.0-flash"
+$env:SUPPORT_AGENT_MODEL="gemini-3.8-flash"
 python -m src.evaluation.generate_golden_replies --limit 220 --k 5
 ```
 
@@ -773,14 +947,16 @@ Required environment variable:
 - `SUPPORT_AGENT_MODEL` can select the configured model if needed
 
 ```powershell
-$env:SUPPORT_AGENT_MODEL="gemini-3.1-flash-lite"
-python -m src.evaluation.llm_judge --live --limit 220
+$env:SUPPORT_AGENT_MODEL="gemini-3.8-flash"
+& .\.venv\Scripts\python.exe -m src.evaluation.llm_judge --live --limit 20
 ```
 
-This step makes 220 live judge calls. It depends on external API access, rate
-limits, and the availability of the generated reply checkpoint. The checked-in
-Gemini JSONL and summary are already available for inspection, so rerunning this
-step is optional.
+This optional step is capped at 20 examples by the CLI and requires separate
+authorization before use. It depends on external API access, rate limits, and
+the availability of the generated reply checkpoint. The checked-in Gemini
+artifacts are available for inspection, so rerunning this step is not needed
+to reproduce offline diagnostics. Live Gemini quality for the current milestone
+was not evaluated.
 
 ### Important reproducibility note
 

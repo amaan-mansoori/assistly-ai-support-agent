@@ -32,6 +32,8 @@
     "adjudicator_id": {
       "type": "string",
       "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
       "description": "Use a pseudonymous identifier; do not store a real name or email."
     },
     "source_annotator_ids": {
@@ -40,7 +42,9 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
       }
     },
     "adjudication_status": {

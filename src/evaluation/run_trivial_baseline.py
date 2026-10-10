@@ -4,12 +4,18 @@ from __future__ import annotations
 import csv
 import json
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable, cast
+from uuid import uuid4
 
 from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, f1_score, precision_recall_fscore_support
-from src.evaluation.dataset_manifest import DEFAULT_MANIFEST, verify_dataset
+from src.evaluation.dataset_manifest import (
+    DEFAULT_MANIFEST,
+    sha256_file,
+    verify_dataset,
+)
 
 GOLDEN_SET = Path("data/golden/golden_set.csv")
 JSON_REPORT = Path("reports/evaluation/trivial_baseline.json")
@@ -102,6 +108,17 @@ def write_reports(metrics: dict[str, object], json_path: Path = JSON_REPORT,
         "This baseline predicts the single most frequent `human_intent` for every example.",
         "It uses no customer text, context, candidate stratum, or other feature.",
         "",
+    ]
+    run_metadata = metrics.get("run_metadata")
+    if isinstance(run_metadata, dict):
+        lines.extend([
+            f"- Dataset SHA-256: `{run_metadata['dataset_sha256']}`",
+            f"- Manifest SHA-256: `{run_metadata['dataset_manifest_sha256']}`",
+            f"- Run timestamp: `{run_metadata['timestamp_utc']}`",
+            f"- Dataset provenance: `{run_metadata['dataset_provenance_status']}`",
+            "",
+        ])
+    lines.extend([
         f"- Evaluation examples: **{metrics['number_of_evaluation_examples']}**",
         f"- Majority class: **`{metrics['majority_class']}`**",
         f"- Majority-class count: **{metrics['majority_class_count']}**",
@@ -113,7 +130,7 @@ def write_reports(metrics: dict[str, object], json_path: Path = JSON_REPORT,
         "",
         "| Intent | Precision | Recall | F1 | Support |",
         "|---|---:|---:|---:|---:|",
-    ]
+    ])
     for intent in ALLOWED_LABELS:
         values = per_intent[intent]
         lines.append(
@@ -124,9 +141,25 @@ def write_reports(metrics: dict[str, object], json_path: Path = JSON_REPORT,
 
 
 def main() -> None:
-    _, rows = verify_dataset(GOLDEN_SET, DEFAULT_MANIFEST)
+    manifest, rows = verify_dataset(GOLDEN_SET, DEFAULT_MANIFEST)
     labels = [row["human_intent"] for row in rows]
     metrics = evaluate(labels)
+    metrics["run_metadata"] = {
+        "run_id": datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        + "-" + uuid4().hex[:8],
+        "timestamp_utc": datetime.now(UTC).isoformat(),
+        "dataset_version": manifest["dataset_version"],
+        "dataset_sha256": manifest["sha256"],
+        "dataset_manifest_sha256": sha256_file(DEFAULT_MANIFEST),
+        "dataset_provenance_status": manifest["provenance_status"],
+        "evaluator_version": "majority-baseline-v1",
+        "evaluation_schema_version": "assistly-evaluation-schema-v2",
+        "run_mode": "deterministic_baseline",
+        "provider": "not_applicable",
+        "model": None,
+        "examples_evaluated": len(rows),
+        "configuration": {},
+    }
     write_reports(metrics)
     print(json.dumps(metrics, indent=2))
 

@@ -9,11 +9,13 @@ from typing import Any
 DEFAULT_THRESHOLDS = Path("configs/evaluation_regression_thresholds.json")
 IDENTITY_FIELDS = (
     "dataset_sha256",
+    "dataset_manifest_sha256",
     "dataset_version",
     "evaluation_schema_version",
     "evaluator_version",
     "prompt_version",
     "retrieval_version",
+    "evidence_policy_version",
     "retrieval_backend",
     "run_mode",
     "provider",
@@ -106,6 +108,27 @@ def compare_reports(
                 if baseline_config.get(key) != candidate_config.get(key)
             ),
         }
+    configured_metrics = thresholds.get("metrics")
+    if isinstance(configured_metrics, dict):
+        for name, policy in configured_metrics.items():
+            if not isinstance(policy, dict):
+                continue
+            path = policy.get("path", name)
+            if not isinstance(path, str):
+                continue
+            baseline_denominator = _metric_denominator(baseline, path)
+            candidate_denominator = _metric_denominator(candidate, path)
+            if (
+                baseline_denominator != candidate_denominator
+                and (
+                    baseline_denominator is not None
+                    or candidate_denominator is not None
+                )
+            ):
+                mismatches[f"metric_denominator.{name}"] = {
+                    "baseline": baseline_denominator,
+                    "candidate": candidate_denominator,
+                }
     if mismatches:
         return {
             "gate_version": "evaluation-regression-gate-v1",

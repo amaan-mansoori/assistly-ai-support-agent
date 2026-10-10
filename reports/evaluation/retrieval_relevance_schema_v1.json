@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "assistly-retrieval-relevance-v1",
+  "title": "Independent retrieval candidate relevance judgment",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "dataset_version",
+    "dataset_sha256",
+    "sample_sha256",
+    "retrieval_artifact_sha256",
+    "query_id",
+    "candidate_id",
+    "rank",
+    "query_text",
+    "candidate_text",
+    "reviewer_id",
+    "relevance_grade",
+    "rationale"
+  ],
+  "properties": {
+    "schema_version": {"const": "assistly-retrieval-relevance-v1"},
+    "dataset_version": {"type": "string", "minLength": 1},
+    "dataset_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sample_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "retrieval_artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "query_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "rank": {"type": "integer", "minimum": 1},
+    "query_text": {"type": "string", "minLength": 1},
+    "candidate_text": {"type": "string", "minLength": 1},
+    "reviewer_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+    "relevance_grade": {"type": ["integer", "null"], "enum": [0, 1, 2, null]},
+    "rationale": {"type": "string"}
+  },
+  "additionalProperties": true
+}

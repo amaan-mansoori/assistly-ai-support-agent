@@ -34,7 +34,7 @@ class AgentConfig:
     minimum_grounding_token_support: float = 0.5
     escalation_confidence_threshold: float = 0.7
     provider: str = "gemini"
-    model: str = "gemini-2.0-flash"
+    model: str = "gemini-3.8-flash"
     provider_timeout_seconds: float = 30.0
     provider_max_retries: int = 2
     history_window: int = 12

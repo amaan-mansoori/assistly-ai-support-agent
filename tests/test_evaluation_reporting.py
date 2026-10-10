@@ -15,6 +15,7 @@ from src.evaluation.llm_judge import (
     GeminiJudgeDriver,
     StructuredJudgeDriver,
     build_judge_prompt,
+    hydrate_customer_text,
     judge_records,
     load_judge_checkpoint,
     run_live_judge,
@@ -41,7 +42,31 @@ def test_grounding_is_deterministic_and_flags_unsupported_claim():
     assert result["specific_claim_count"] == 2
     assert result["unsupported_specific_claims"] == ["2026-09-14", "10"]
     assert result["grounding_score"] < 1
+    assert result["metric_version"] == "offline-grounding-v2"
 
+
+def test_grounding_does_not_treat_historical_customer_text_as_support():
+    record = _record(draft="Your refund was processed.")
+    record["retrieved_examples"] = [{
+        "customer_text": "Your refund was processed.",
+        "amazonhelp_response": "Please check the order page.",
+    }]
+
+    result = evaluate_grounding(record)
+
+    assert result["evidence_token_support_rate"] == 0
+    assert result["grounding_score"] < 1
+
+
+def test_judge_hydrates_source_text_only_in_memory():
+    record = {"example_id": "one", "draft_reply": "Please contact support."}
+    hydrated = hydrate_customer_text(
+        [record],
+        [{"example_id": "one", "customer_text": "My order is delayed."}],
+    )
+
+    assert hydrated[0]["customer_text"] == "My order is delayed."
+    assert "customer_text" not in record
 
 def test_offline_reply_quality_includes_evidence_metrics():
     metrics = evaluate_reply_quality([_record()], {"one": "Please contact support."})

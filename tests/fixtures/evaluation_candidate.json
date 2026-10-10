@@ -1,11 +1,13 @@
 {
   "run_metadata": {
     "dataset_sha256": "fixture-dataset-sha256",
+    "dataset_manifest_sha256": "fixture-manifest-sha256",
     "dataset_version": "fixture-v1",
     "evaluation_schema_version": "assistly-evaluation-schema-v2",
-    "evaluator_version": "integrated-evaluator-v3",
+    "evaluator_version": "integrated-evaluator-v4",
     "prompt_version": "assistly-support-prompt-v3",
     "retrieval_version": "assistly-retrieval-v2",
+    "evidence_policy_version": "assistly-evidence-policy-v2",
     "retrieval_backend": "tfidf",
     "run_mode": "deterministic_mock",
     "provider": "deterministic_mock",

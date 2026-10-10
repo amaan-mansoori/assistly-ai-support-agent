@@ -7,7 +7,7 @@ reply's metadata.
 
 The model is configured with `SUPPORT_AGENT_MODEL`. When `GEMINI_API_KEY` is
 present, the current `google-genai` SDK is used with a default
-`gemini-2.0-flash` model; otherwise the existing OpenAI-compatible path uses
+`gemini-3.8-flash` model; otherwise the existing OpenAI-compatible path uses
 `OPENAI_API_KEY` and optionally `OPENAI_BASE_URL`. No credentials are
 hard-coded. Missing configuration fails clearly. Output is strict JSON and is
 validated for reply text, confidence range, boolean review flag, and a concise

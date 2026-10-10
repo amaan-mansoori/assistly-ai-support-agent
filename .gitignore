@@ -63,3 +63,5 @@ reports/evaluation/human_grounded_runs/
 # Distribution
 *.whl
 *.tar.gz
+
+.env
