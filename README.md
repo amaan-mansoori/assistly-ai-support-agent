@@ -1,1096 +1,385 @@
-# Assistly
+# Assistly — AI Customer Support Platform
 
-**AI-Powered Customer Support Platform**
+![CI](https://github.com/amaan-mansoori/assistly-ai-support-agent/actions/workflows/ci.yml/badge.svg?branch=main)
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=next.js&logoColor=white)
+![License](https://img.shields.io/badge/License-Not%20specified-lightgrey)
 
-AI-powered customer support, grounded in real resolutions.
+**An AI-assisted customer-support system that retrieves historical resolutions, drafts evidence-aware replies, and escalates uncertain cases to a human support workflow.**
 
-Assistly is a customer-support platform built from an AI support-agent
-internship take-home project. It classifies customer intent, retrieves
-historical resolutions, drafts evidence-grounded replies, and routes uncertain
-or sensitive cases to a human support team.
+Assistly combines an independently testable Python agent core with a FastAPI service, a Next.js customer/staff dashboard, relational persistence, configurable retrieval backends, and reproducible evaluation tooling. It is a portfolio engineering project and a **production-oriented foundation—not a claim of production readiness**.
 
-Built on the [Customer Support on Twitter](https://www.kaggle.com/datasets/thoughtvector/customer-support-on-twitter) dataset.
-
----
-
-## Quick Start
-
-### 1. Clone & install
-
-```bash
-git clone <repo-url>
-cd <repository-directory>
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
-pip install -r requirements.txt
-```
-
-### 2. Set up credentials
-
-```bash
-# Create a .env file (never committed to git)
-copy .env.example .env
-# Edit .env and add your API keys
-```
-
-Credentials are needed only for the corresponding optional operations:
-| Variable | Purpose |
-|---|---|
-| `KAGGLE_USERNAME` | Kaggle API — raw dataset download |
-| `KAGGLE_KEY` | Kaggle API — raw dataset download |
-| `GEMINI_API_KEY` | Gemini API — live reply generation and optional live judge |
-| `OPENAI_API_KEY` | OpenAI-compatible API — reply generation when selected |
-
-Optional:
-| Variable | Purpose |
-|---|---|
-| `SUPPORT_AGENT_MODEL` | Select the configured model for generation or judging |
-| `SUPPORT_AGENT_PROVIDER` | Override the runtime provider (`gemini` or `openai`) |
-| `SUPPORT_AGENT_TOP_K` | Override the number of retrieved examples |
-| `SUPPORT_AGENT_MIN_RETRIEVAL_SIMILARITY` | Override the lexical evidence floor |
-| `SUPPORT_AGENT_MIN_GROUNDING_TOKEN_SUPPORT` | Override the lexical grounding floor |
-| `SUPPORT_AGENT_ESCALATION_THRESHOLD` | Override the model-confidence review threshold |
-| `SUPPORT_AGENT_TIMEOUT_SECONDS` | Bound a provider call's timeout |
-| `SUPPORT_AGENT_MAX_RETRIES` | Bound provider retries (0–5) |
-
-### 3. Download the dataset
-
-```bash
-kaggle datasets download -d thoughtvector/customer-support-on-twitter -p data/raw --unzip
-```
-
-This creates `data/raw/twcs/twcs.csv` (~493 MB, ~2.8M rows).
-
-> **Note:** `data/raw/sample.csv` (93 rows) is a small sample included
-> for quick smoke-testing only. It is **not** the full dataset. All
-> analysis and modeling uses `data/raw/twcs/twcs.csv`.
-
-### 4. Inspect the dataset & select a brand
-
-```bash
-# Full summary inspection (chunked read, memory-safe):
-python -m src.data.inspect_dataset
-
-# Deep dive into a specific candidate brand:
-python -m src.data.inspect_dataset --brand AmazonHelp
-
-# Show more brands in the ranking:
-python -m src.data.inspect_dataset --top 50
-```
-
-The full inspection reads `data/raw/twcs/twcs.csv` in chunks and prints:
-schema, null rates, inbound/outbound counts, reply-linkage statistics,
-text length distribution, and a ranked list of candidate support accounts.
-
-**AmazonHelp is the selected brand.** Its selection is justified empirically
-in `reports/brand_comparison.md` and `reports/amazonhelp_validation.md` using
-volume, direct linkage, thread depth, substantive-response rate, and retrieval
-feasibility.
+[Repository](https://github.com/amaan-mansoori/assistly-ai-support-agent) · [CI workflow](https://github.com/amaan-mansoori/assistly-ai-support-agent/actions/workflows/ci.yml) · [Evaluation reports](reports/evaluation/final_evaluation.md) · [Decision log](reports/decision_log.md)
 
 ---
 
-## Project Structure
+## Contents
 
-```
-├── configs/              # YAML configuration files
-│   └── default.yaml
-├── data/
-│   ├── raw/              # Original downloaded data (git-ignored)
-│   │   ├── twcs/         #   └── twcs.csv  (~2.8M rows, the real dataset)
-│   │   └── sample.csv    #   Small 93-row sample (smoke-testing only)
-│   ├── interim/          # Intermediate processing artifacts
-│   ├── processed/        # Final cleaned data ready for modeling
-│   └── golden/           # Golden evaluation data (label provenance unresolved)
-├── src/
-│   ├── data/             # Data loading, cleaning, thread reconstruction
-│   ├── intents/          # Intent discovery and classification
-│   ├── retrieval/        # TF-IDF baseline, pgvector adapter, ingestion
-│   ├── agent/            # Reusable agent core and provider adapters
-│   ├── api/              # FastAPI routes, auth, middleware, schemas
-│   ├── application/      # Conversation, support, ticket, feedback services
-│   ├── db/               # SQLAlchemy entities and session construction
-│   ├── platform/         # Settings, rate limits, metrics, operations
-│   └── evaluation/       # Historical benchmarks and integrated-agent harness
-├── frontend/             # Next.js customer support and staff dashboard
-├── alembic/              # Versioned database migrations
-├── experiments/          # Experiment logs and outputs (git-ignored)
-├── reports/              # Final report, figures, decision log
-├── tests/                # Unit and integration tests
-├── Dockerfile            # Backend image
-├── compose.yaml          # Backend, PostgreSQL/pgvector, Redis, frontend
-├── requirements.txt
-└── README.md
-```
+- [Highlights](#highlights)
+- [System architecture](#system-architecture)
+- [Agent request flow](#agent-request-flow)
+- [Technology stack](#technology-stack)
+- [Features](#features)
+- [Evaluation: results and caveats](#evaluation-results-and-caveats)
+- [Quick start](#quick-start)
+- [API overview](#api-overview)
+- [Testing and CI](#testing-and-ci)
+- [Repository map](#repository-map)
+- [Resume-ready project entry](#resume-ready-project-entry)
+- [Known limitations](#known-limitations)
+- [Project documentation](#project-documentation)
 
-## Integrated runtime agent
+## Highlights
 
-The repository now has a single synchronous orchestration entrypoint,
-`SupportAgent.handle(AgentRequest(...))`. It reuses the deterministic
-11-category taxonomy in `src/intents/final_taxonomy_audit.py`, the
-configuration-selected TF-IDF/vector/hybrid retriever, structured reply
-generation, the existing escalation policy, and the offline lexical grounding
-diagnostic. The core remains independently callable; the platform wraps it
-through application services rather than moving business logic into API routes.
+- **Evidence-aware agent orchestration:** deterministic intent detection, historical-response retrieval, structured reply generation, grounding diagnostics, and conservative escalation.
+- **Retrieval choices:** TF-IDF lexical baseline, optional FastEmbed + PostgreSQL/pgvector semantic retrieval, and configurable weighted hybrid retrieval.
+- **Human-in-the-loop workflow:** persistent conversations, support tickets, assignment/status transitions, and staff access controls.
+- **Backend engineering:** FastAPI REST endpoints, SQLAlchemy models, Alembic migrations, idempotent message submission, configurable rate limiting, and health/readiness routes.
+- **Full-stack dashboard:** Next.js/TypeScript UI for customer conversations, staff ticket handling, and admin analytics.
+- **Evaluation-first development:** baselines, integrity-checked artifacts, regression gates, failure analysis, and an independent retrieval-relevance workflow whose metrics stay unmeasured until human judgments exist.
+- **Automated checks:** GitHub Actions runs Python tests/lint/security checks and frontend audit/type-check/build.
 
-```text
-Request validation
-  -> current-turn intent detection (history fallback only when unclear)
-  -> current-turn-first, intent-tagged retrieval query
-  -> configured TF-IDF / optional pgvector / weighted hybrid ranking
-  -> evidence intent/resolution checks and conservative conflict gate
-  -> constrained evidence package (source IDs + historical resolutions only)
-  -> validated structured reply (Gemini or OpenAI-compatible provider)
-  -> independent runtime grounding heuristic
-  -> conservative escalation policy
-  -> structured AgentResponse
-```
+## System architecture
 
-`confidence` from the deterministic intent detector is `None`; no probability
-is fabricated. Retrieved rows do not have trusted intent labels; a local
-taxonomy check is therefore only a retrieval filter/proxy, not a relevance
-label. Current-turn text leads the query, with recent history added only for a
-taxonomy history fallback. Hybrid fusion retains the existing configurable
-lexical/semantic weights (default 0.5/0.5); no new ranking weights are inferred
-from provisional labels. Runtime diagnostics expose backend, fetched candidate
-count, selected evidence IDs, component scores, and heuristic evidence-gate
-signals without logging customer text. Candidate-count scope is reported
-because TF-IDF scores its full local corpus, while pgvector and hybrid expose
-only their fetched top-k candidate sets.
-
-The FastAPI platform uses `build_retriever` and honors
-`RETRIEVER_BACKEND`. The local `python -m src.agent` demo and
-`SupportAgent.from_repository` use the deterministic TF-IDF `HistoricalRetriever`
-directly; they do not use the optional FastEmbed backend.
-
-Evidence status distinguishes `none`, `weak`, `conflicting`, and `sufficient`.
-Sufficiency requires a candidate above the configured similarity floor, a
-nonempty support resolution, and (when historical customer text is present) a
-matching deterministic intent. A small lexical outcome/negation check catches
-some obvious conflicts and escalates; it does not prove consistency. The
-`evidence_resolution_match` runtime signal is explicitly a proxy for a
-nonempty, intent-compatible historical resolution, not an independent
-relevance judgment. The provider receives only evidence IDs and resolution
-text; historical customer messages and their embedded instructions are not
-passed as evidence. All user/context/evidence fields remain untrusted data.
-
-The validated provider contract is `reply`, `grounding_status`, `confidence`,
-`escalation_required`, and `evidence_ids`. Legacy field names are normalized
-for compatibility but unknown fields, invalid values, duplicate IDs, and IDs
-not supplied in the evidence package fail closed. Independent grounding still
-checks literal claims (including URLs, numbers, timelines, policy language,
-and actions) and lexical overlap; it is not an entailment model or proof of
-truth. Sensitive intents, unclear requests, weak/conflicting evidence,
-unsupported claims, and provider/validation errors escalate to human review.
-Logs include request correlation and operational fields, not customer message
-text or credentials.
-
-### Local demo
-
-The demo needs the prepared conversation-pairs file and golden set in the
-repository's expected local paths. It builds the TF-IDF index in memory.
-`--mock` avoids any model API call but still requires those data files.
-
-```bash
-# Prepare local corpus files if they are not already present.
-python -m src.intents.discover_intents
-
-# Run with the local mock provider (no API credentials).
-python -m src.agent --mock --message "My order is late. Where can I check delivery status?"
-
-# Run with configured live provider credentials.
-python -m src.agent --message "My order is late. Where can I check delivery status?" \
-  --history "Tracking has not updated since yesterday."
-```
-
-Interactive mode is available by omitting `--message`. The result is JSON and
-includes intent, evidence summary, grounding diagnostics, draft, decision,
-reason, request ID, processing duration, and a sanitized error category when
-applicable. Do not treat `--mock` output as a model evaluation.
-
-### Runtime configuration
-
-`src/agent/config.py` loads `configs/default.yaml`, then applies environment
-overrides. Secret keys are read from the environment (and `.env` for local
-development); never put secrets in YAML or source code. The runtime provider
-defaults to Gemini and the model defaults to `gemini-3.8-flash`; use
-`SUPPORT_AGENT_PROVIDER=openai` with `OPENAI_API_KEY` and a
-`SUPPORT_AGENT_MODEL` accepted by the selected OpenAI-compatible endpoint to
-use that adapter. `SUPPORT_AGENT_MODEL` overrides the model. The CLI supports
-an alternate YAML file through `--config`.
-
-TF-IDF is the default reproducible runtime backend. The FastAPI platform can
-select pgvector/CPU FastEmbed semantic or hybrid retrieval with
-`RETRIEVER_BACKEND=vector` or `hybrid`; the local core CLI remains TF-IDF.
-FastEmbed passes the configured `EMBEDDING_MODEL` to its query and passage
-encoders, while the PostgreSQL column and runtime vector validation are fixed
-at 384 dimensions. `BAAI/bge-small-en-v1.5` is the configured model; the
-FastEmbed model was not initialized during offline verification. The selected
-model must produce exactly 384 finite values. FastEmbed may load/download its
-model when the backend is initialized, so this is not an offline cold-start
-path.
-
-There is no automatic fallback from vector or hybrid mode to TF-IDF if
-FastEmbed, the model, PostgreSQL, or pgvector is unavailable. Retrieval
-exceptions after agent initialization fail closed to human review; backend
-initialization errors do not switch backends and may prevent agent creation.
-Select `RETRIEVER_BACKEND=tfidf` explicitly for the offline lexical backend.
-Retrieval conflict and grounding checks are intentionally heuristic, not
-production-grade factual verification or human relevance labels.
-Provider calls require network access and valid credentials; normal tests use
-injected mock providers and do not call external model APIs.
-
-### Provider boundary and failure behavior
-
-The agent depends on a small callable provider protocol rather than a provider
-SDK. Adapters use Google's Gen AI Interactions API or OpenAI-compatible chat
-completions; `DeterministicMockProvider` supplies stable offline responses for
-tests and explicit smoke runs. The provider, model, timeout, and retry count are
-configurable. Responses must satisfy the strict JSON contract before they can
-continue to grounding and decision policy. SDK/network failures and malformed
-or invalid output become safe errors and fail closed to human review. API keys
-are read from the environment and are not included in application logs.
-
-### Prompt and context boundaries
-
-The current message, recent conversation turns, and retrieved historical
-examples are serialized into separate fields marked as untrusted input. The
-system instruction explicitly rejects instructions embedded in those fields;
-the current turn is classified before history is used to resolve ambiguity.
-This reduces prompt-injection and stale-context risks, but is not a formal
-guarantee against model influence. Sensitive intents and uncertain or
-unsupported responses still route to a human. The platform exposes structured
-intent, evidence, grounding, decision, and timing metadata—not private
-chain-of-thought.
-
-## Production-oriented platform foundation
-
-The platform adds an authenticated REST API and dashboard around the existing
-agent core. PostgreSQL is the intended durable deployment database; local
-development and offline tests may use SQLite. SQLAlchemy models are migrated
-with Alembic. The database is the source of truth for conversations, messages,
-agent runs, tickets, feedback, and optional vector knowledge. Redis is used for
-cross-worker message rate limiting when configured; if it is unavailable, the
-limiter logs the failure and falls back to a process-local counter.
+This diagram describes the intended application composition. PostgreSQL/pgvector and the complete Compose stack are implemented in the repository, but their full runtime operation is not claimed as independently verified by the latest offline checks.
 
 ```mermaid
-flowchart LR
-  UI[Next.js dashboard] --> API[FastAPI routes]
-  API --> SVC[Application services]
-  SVC --> DB[(PostgreSQL)]
-  SVC --> CORE[Phase 1 SupportAgent]
-  CORE --> INTENT[Intent detection]
-  CORE --> RETRIEVE[TF-IDF or optional pgvector retrieval]
-  CORE --> GEN[Configured reply provider]
-  CORE --> POLICY[Grounding and escalation policy]
-  POLICY --> DB
-  DB --> QUEUE[Human-review ticket queue]
-  API --> REDIS[(Optional Redis rate limit)]
+flowchart TD
+    CUSTOMER[Customer / Support Staff] --> WEB[Next.js Dashboard]
+    WEB -->|REST + bearer token| API[FastAPI API]
+    API --> AUTH[Authentication, RBAC, validation]
+    AUTH --> APP[Application Services]
+    APP --> DB[(SQLAlchemy Persistence<br/>SQLite locally / PostgreSQL intended)]
+    APP --> AGENT[SupportAgent Core]
+    AGENT --> INTENT[Intent Detection]
+    AGENT --> RETRIEVAL[Configured Retrieval]
+    RETRIEVAL --> TFIDF[TF-IDF]
+    RETRIEVAL --> VECTOR[Optional FastEmbed + pgvector]
+    RETRIEVAL --> HYBRID[Optional Weighted Hybrid]
+    TFIDF --> EVIDENCE[Evidence Gate]
+    VECTOR --> EVIDENCE
+    HYBRID --> EVIDENCE
+    EVIDENCE --> PROVIDER[Configured LLM Provider]
+    PROVIDER --> GUARD[Grounding Diagnostics + Escalation Policy]
+    GUARD -->|Draft / safe response| APP
+    GUARD -->|Uncertain or sensitive case| TICKET[Human Review Ticket]
+    TICKET --> DB
+    APP --> DB
+    API -. optional distributed rate limiting .-> REDIS[(Redis)]
 ```
 
-### Local setup
+### Agent decision flow
 
-Python 3.14.3 is the verified development runtime. Install the backend and
-prepare environment variables:
+```mermaid
+flowchart TD
+    A[Incoming message + bounded history] --> B[Validate request]
+    B --> C[Detect current-turn intent]
+    C --> D[Retrieve top-k historical evidence]
+    D --> E{Evidence sufficiently relevant?}
+    E -->|No / conflict / sensitive intent| H[Escalate to human review]
+    E -->|Potentially sufficient| F[Generate structured draft]
+    F --> G{Output schema and grounding checks pass?}
+    G -->|No / provider error| H
+    G -->|Yes| I[Apply escalation policy]
+    I --> J{Human review required?}
+    J -->|Yes| H
+    J -->|No| K[Return structured decision]
+    H --> L[Persist review ticket and diagnostics]
+    K --> M[Persist run and conversation metadata]
+    L --> N[Operational result]
+    M --> N
+```
+
+**Important:** retrieval and grounding checks are heuristic safeguards, not proof that a reply is factually correct. User messages, history, and evidence are treated as untrusted inputs. Provider output must follow a constrained structured contract; uncertain, sensitive, unsupported, or failed requests route to review.
+
+## Technology stack
+
+| Layer | Technologies |
+|---|---|
+| Language and API | Python 3.14, FastAPI, Pydantic |
+| Agent and ML | Intent taxonomy/rules, scikit-learn, TF-IDF, structured LLM-provider adapters |
+| Retrieval | TF-IDF cosine similarity; optional FastEmbed CPU embeddings, PostgreSQL/pgvector, weighted hybrid fusion |
+| Persistence | SQLAlchemy, Alembic, SQLite for local/testing, PostgreSQL for intended durable deployment |
+| Platform | JWT bearer authentication, role-based access control, idempotency keys, rate limiting, health/readiness, process-local metrics |
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS 4 |
+| Infrastructure | Docker, Docker Compose, PostgreSQL/pgvector, optional Redis |
+| Quality | pytest, Ruff, pip-audit, npm audit, TypeScript checks, Next.js build, GitHub Actions |
+
+## Features
+
+### AI support agent
+- A reusable `SupportAgent.handle(...)` orchestration entry point.
+- Bounded conversation-history handling and deterministic intent detection.
+- Retrieval query construction with the current customer turn prioritized.
+- TF-IDF by default; optional vector or hybrid retrieval for the FastAPI platform.
+- Evidence sufficiency/conflict checks, structured reply contract validation, lexical grounding diagnostics, and conservative escalation.
+- Configurable provider, model, timeout, retry count, retrieval thresholds, and escalation behavior.
+- Sanitized operational logging with request IDs and stage timings; customer message content and credentials are not intentionally written to operational logs.
+
+### Customer and staff platform
+- Customer registration/login and role-aware authorization for customer, agent, and admin actions.
+- Conversation and message persistence with idempotency keys.
+- Human-review ticket lifecycle: list, assign, start, inspect, and resolve.
+- Feedback collection and admin analytics.
+- Readiness endpoint that checks the database; admin-only process-local metrics.
+- Configurable rate limiting with Redis coordination when configured and a process-local fallback otherwise.
+- Retention preview by age and explicitly opted-in deletion command.
+
+### Retrieval and knowledge
+- Historical AmazonHelp customer/resolution pairs are used to build the TF-IDF retrieval corpus after documented preparation.
+- The retrieval path excludes frozen evaluation IDs and normalized exact-text duplicates.
+- Optional knowledge ingestion and pgvector retrieval use a fixed 384-dimensional vector contract.
+- Hybrid retrieval uses configurable lexical and semantic weights (default 0.5/0.5); these weights are engineering defaults, not weights optimized on independently judged relevance labels.
+
+### Research and evaluation
+- Majority-class and TF-IDF + Logistic Regression classification baselines.
+- Historical retrieval diagnostics and privacy-minimized failure examples.
+- Stored reply-quality analysis and a separate human reply-quality audit.
+- Dataset/manifest hash checks and evaluation regression gates.
+- Independent 50-query / 250-candidate retrieval relevance review workflow with two reviewer exports and adjudication support. **Its independent Recall@K, MRR, and nDCG metrics remain NOT MEASURED** because completed independent relevance judgments are not available.
+
+## Evaluation: results and caveats
+
+The following numbers are **historical component-level artifacts** in the repository, not a current end-to-end agent score. They are preserved for transparency and have not been re-established as verified performance against human ground truth.
+
+| Component | Historical result | How to interpret it |
+|---|---:|---|
+| Majority-class intent baseline | 24.09% accuracy | Reference baseline from the stored evaluation artifact |
+| TF-IDF + Logistic Regression | 49.55% accuracy | Offline intent-classification baseline |
+| TF-IDF + Logistic Regression | 53.53% macro-F1 | Class-averaged F1 from the same historical baseline |
+| Retrieval intent-match@1 | 31.82% | Taxonomy-match heuristic proxy—not judged relevance |
+| Retrieval intent-match@3 | 48.64% | Taxonomy-match heuristic proxy—not judged relevance |
+| Retrieval intent-match@5 | 56.82% | Taxonomy-match heuristic proxy—not judged relevance |
+
+### Interpretation matters
+
+- The frozen evaluation CSV contains 220 rows with populated `human_intent` values, but the repository does **not** establish that those labels were independently assigned or reviewed by humans. Provenance is unresolved; see [the provenance note](reports/golden_set_provenance.md).
+- The historical TF-IDF classifier scores should therefore be treated as diagnostics against stored provisional reference labels—not verified human-ground-truth results.
+- `intent-match@k` checks whether retrieved examples match the provisional reference intent. It is **not** independent relevance, answer quality, factuality, or end-to-end agent accuracy.
+- Human retrieval relevance requires two independent reviewers and adjudication. Until then, Recall@1/3/5, MRR, and nDCG@1/3/5 are **not measured**.
+- Stored LLM-judge artifacts are historical artifacts and do not prove a fresh live-provider evaluation. A 20-example live integrated evaluation has not been established as completed.
+- The latest verified GitHub Actions run is the project’s automated CI evidence; CI passing does not establish production deployment or full PostgreSQL/pgvector runtime verification.
+
+See [the detailed evaluation report](reports/evaluation/final_evaluation.md), [classifier baseline](reports/evaluation/simple_baseline.md), [retrieval report](reports/evaluation/retrieval_evaluation.md), and [independent retrieval protocol](reports/evaluation/independent_retrieval_evaluation.md).
+
+## Quick start
+
+### Prerequisites
+
+- Python 3.14 (the runtime used in the repository’s CI workflow)
+- Node.js 22 only if running the frontend outside Docker
+- Git
+- Docker Compose for the multi-service local stack
+- Optional: Kaggle credentials for downloading and preparing the full upstream dataset
+- Optional: Gemini or OpenAI-compatible credentials for live reply generation
+
+### 1. Clone and create a Python environment
+
+```bash
+git clone https://github.com/amaan-mansoori/assistly-ai-support-agent.git
+cd assistly-ai-support-agent
+python -m venv .venv
+```
+
+Activate it:
 
 ```powershell
-python -m venv .venv
+# Windows PowerShell
 .\.venv\Scripts\Activate.ps1
+```
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+```
+
+Install dependencies and create local configuration:
+
+```bash
 python -m pip install -r requirements.txt
+```
+
+```powershell
+# Windows PowerShell
 Copy-Item .env.example .env
 ```
 
-For a quick API-only SQLite setup, leave `DATABASE_URL` unset, then run:
+For macOS/Linux, use `cp .env.example .env`. Never commit the resulting `.env` file. The example credentials are placeholders and must be replaced before any shared deployment.
 
-```powershell
+### 2. Start the API with a local SQLite database
+
+The simple API path uses SQLite when `DATABASE_URL` is unset. Run migrations and start FastAPI:
+
+```bash
 python -m alembic upgrade head
 python -m uvicorn src.api.main:app --reload
 ```
 
-This creates the local database through migrations. Health checks are available
-at `/health` and `/health/ready`; readiness verifies the database. Interactive
-API documentation is at `/api/docs` and `/api/redoc`. To generate customer
-replies, configure `GEMINI_API_KEY` or `OPENAI_API_KEY` and the corresponding
-`SUPPORT_AGENT_PROVIDER` / `SUPPORT_AGENT_MODEL`. Without a provider, the agent
-fails closed and opens a human-review ticket.
+Useful local URLs:
 
-The default TF-IDF runtime needs the prepared
-`data/interim/amazonhelp_conversations.csv` and `data/golden/golden_set.csv`.
-Prepare these using the existing data/intents workflow before expecting
-historical retrieval in a live local API. Compose bind-mounts the interim and
-golden directories read-only; the Docker image itself does not contain raw or
-interim customer data. Without the prepared interim CSV, the agent fails closed
-to escalation instead of returning an ungrounded answer.
+- API: `http://localhost:8000`
+- OpenAPI / Swagger UI: `http://localhost:8000/api/docs`
+- ReDoc: `http://localhost:8000/api/redoc`
+- Liveness: `http://localhost:8000/health`
+- Database readiness: `http://localhost:8000/health/ready`
 
-### Docker Compose
+The basic API setup alone does not provision the historical retrieval corpus. Before using the agent with the default TF-IDF backend, prepare the interim conversation-pair file and frozen golden set using the data workflow below. Without the expected local data files, the agent may fail closed to escalation.
 
-Docker Compose runs the backend, PostgreSQL with pgvector, Redis, and frontend.
-Copy the example environment file, then start the development stack:
+### 3. Prepare the local retrieval data (optional)
 
-```powershell
-Copy-Item .env.example .env
-docker compose up --build
+The full upstream dataset is downloaded separately; it is not part of the Git repository.
+
+```bash
+python -m pip install kaggle
+kaggle datasets download -d thoughtvector/customer-support-on-twitter -p data/raw --unzip
+python -m src.data.inspect_dataset --brand AmazonHelp
+python -m src.intents.discover_intents
 ```
 
-The example database password and JWT secret are local-development placeholders
-only. Replace them before any shared or deployed use. Compose applies Alembic
-migrations before starting the API. The dashboard is served at
-`http://localhost:3000`, the API at `http://localhost:8000`, and API docs at
-`http://localhost:8000/api/docs`. A production frontend build must set
-`NEXT_PUBLIC_API_BASE_URL` to an HTTPS API origin; only loopback HTTP is
-accepted for local development.
+Dataset preparation depends on access to the upstream Kaggle dataset and available local resources. The small `data/raw/sample.csv` file, where present, is for smoke tests only and is not a replacement for the full dataset. The frozen golden set’s label provenance remains unresolved.
 
-To run the frontend outside Docker:
+### 4. Configure a model provider (optional)
 
-```powershell
-Set-Location frontend
+For live draft generation, configure `GEMINI_API_KEY` or `OPENAI_API_KEY` in the local environment and set `SUPPORT_AGENT_PROVIDER` / `SUPPORT_AGENT_MODEL` appropriately. Provider calls require network access and valid credentials, and may incur usage costs. Offline tests use injected deterministic providers and do not need live API calls.
+
+### 5. Run the frontend independently (optional)
+
+```bash
+cd frontend
 npm ci
 npm run dev
 ```
 
-The dashboard has customer sign-in/registration, conversation creation and
-chat, AI escalation status, feedback, an agent ticket queue and ticket detail,
-and admin analytics. Analytics are calculated from persisted rows; empty
-values are shown when there is no data. New registrations are customers only.
-Create support staff through the operator-controlled CLI after migrating the
-database:
+The frontend expects a reachable API URL. For a production build, configure `NEXT_PUBLIC_API_BASE_URL` to an HTTPS API origin; the repository’s build validation only allows loopback HTTP for local development.
+
+### Docker Compose
+
+The Compose configuration defines PostgreSQL/pgvector, Redis, backend, and frontend services. To try the full development stack:
 
 ```powershell
-python -m src.platform.provision_user --email agent@example.com --role agent
-python -m src.platform.provision_user --email admin@example.com --role admin
+Copy-Item .env.example .env
+# Edit .env: replace POSTGRES_PASSWORD and JWT_SECRET with unique local values
+docker compose up --build
 ```
 
-The password is entered interactively, not passed on the command line. The API
-does not expose a public role-elevation endpoint.
+The `.env.example` password and JWT secret are development placeholders, not secure production credentials. The backend bind-mounts the prepared `data/interim` and `data/golden` directories read-only. Full Compose service startup and PostgreSQL/pgvector runtime behavior have not been independently verified as part of the documented offline checks.
 
-### API and access control
+For semantic or hybrid retrieval, use PostgreSQL with pgvector, install the optional CPU embedding dependency (`requirements-embeddings.txt`), and set `RETRIEVER_BACKEND=vector` or `hybrid`. Model initialization may require a network download. There is no automatic fallback to TF-IDF if the configured vector backend cannot initialize.
 
-All application routes use `/api/v1` and bearer tokens:
+## API overview
 
-| Method | Endpoint | Access |
+All application endpoints use the `/api/v1` prefix unless noted.
+
+| Method | Endpoint | Purpose / access |
 |---|---|---|
-| `POST` | `/api/v1/auth/register` | Public; creates a customer |
-| `POST` | `/api/v1/auth/token` | Public; login |
-| `POST`, `GET` | `/api/v1/conversations` | Authenticated; ownership/staff queue scope |
-| `GET` | `/api/v1/conversations/{id}` | Own conversation, permitted queue conversation, or admin |
-| `POST`, `GET` | `/api/v1/conversations/{id}/messages` | Customer create; authorized history |
-| `POST` | `/api/v1/agent/respond` | Customer; requires `Idempotency-Key` |
-| `GET` | `/api/v1/tickets` | Agent sees assigned/open-unassigned cases; admin sees all |
-| `GET` | `/api/v1/tickets/{id}` | Assigned/open-unassigned agent or admin |
-| `POST` | `/api/v1/tickets/{id}/assign`, `/start`, `/resolve` | Agent/admin with transition checks |
-| `POST` | `/api/v1/feedback` | Customer |
-| `GET` | `/api/v1/analytics`, `/api/v1/metrics` | Admin |
-
-Tokens are short-lived HS256 bearer tokens. Passwords are PBKDF2-hashed; tokens
-do not encode roles, and current roles are loaded from the database. The local
-development JWT secret is generated ephemerally if omitted; set a random secret
-of at least 32 characters for production. There is no token refresh/revocation
-flow or external identity provider. CORS is configurable and rejects wildcard
-origins. API errors use a common error envelope and do not return stack traces.
-Message creation requires an idempotency key scoped to the conversation; reuse
-with different content returns a conflict. The default message limit is 60
-requests per user per minute and is configurable with
-`RATE_LIMIT_PER_MINUTE`. Redis coordinates limits across workers; its local
-fallback is per process and therefore not globally consistent.
-
-### Human review, metrics, and retention
-
-An escalation creates a PostgreSQL-backed ticket in `open` state. Agents can
-claim an available case, start work, inspect the transcript, AI draft and
-retrieved evidence, then resolve it. Drafts for escalated cases are not returned
-as customer-facing replies. Admin analytics summarize database data; the
-admin-only `/api/v1/metrics` endpoint exposes lightweight process-local
-counters and latency summaries that reset on process restart.
-
-Persisted agent runs carry correlation identifiers, intent and evidence
-assessment, provider/model metadata, stage timings, final decision, and safe
-escalation reason. Structured operational logs omit message content,
-credentials, and tokens. The metrics endpoint is intentionally process-local;
-it is not a distributed telemetry backend.
-
-The database stores account email/password hash, conversation metadata, message
-text, agent intent/evidence summary/draft/decision, ticket reason and resolution
-metadata, and feedback. It does not persist API credentials or bearer tokens.
-There is no automatic scheduled retention policy. Operators can preview old
-conversation counts, then explicitly apply deletion with cascading removal of
-their messages, runs, tickets, and feedback:
-
-```powershell
-python -m src.platform.retention --days 365
-python -m src.platform.retention --days 365 --apply
-```
-
-The first command is read-only. Validate the cutoff and applicable retention
-obligations before using `--apply`; backups and legal holds are not managed by
-this project.
-
-### Retrieval and knowledge ingestion
-
-TF-IDF remains the default and reproducible lexical baseline. The `Retriever`
-interface also has optional PostgreSQL/pgvector cosine-distance retrieval using
-384-dimensional `BAAI/bge-small-en-v1.5` embeddings. FastEmbed runs ONNX
-Runtime's CPU provider; it avoids the Torch/CUDA dependency stack. Install the
-optional dependency with `python -m pip install -r requirements-embeddings.txt`.
-Vector mode also requires PostgreSQL with the `vector` extension and downloads
-the model on first use. It is optional and is not claimed to improve retrieval
-quality without a measured comparison. Compose keeps it out of the default
-image; set `INSTALL_SEMANTIC_EMBEDDINGS=1` when building to include it.
-
-Set `RETRIEVER_BACKEND` to `tfidf`, `vector`, or `hybrid`. Hybrid mode merges
-the independent lexical and semantic result lists with configurable normalized
-weights (`HYBRID_LEXICAL_WEIGHT` and `HYBRID_SEMANTIC_WEIGHT`), stable
-deduplication, and deterministic ordering. Top-k and similarity floors are
-configurable. TF-IDF remains available as the no-model, no-database baseline;
-vector and hybrid modes require PostgreSQL/pgvector and the optional embedding
-package. A quality improvement is not claimed until evaluated on labeled,
-provenance-appropriate relevance judgments.
-
-The repeatable ingestion command reads existing prepared historical pairs,
-excludes golden IDs and exact normalized customer-text duplicates using the
-existing leakage-safe builder, and upserts knowledge rows. It does not alter
-the source CSVs:
-
-```powershell
-$env:RETRIEVER_BACKEND="vector"
-$env:DATABASE_URL="postgresql+psycopg://USER:PASSWORD@localhost:5432/support_agent"
-python -m alembic upgrade head
-python -m src.retrieval.ingest_knowledge
-```
-
-The source is the prepared AmazonHelp linked customer/brand conversation-pair
-CSV, not the raw downloaded file. Stored fields are the customer tweet ID,
-customer text, linked support-response ID and response text, provenance IDs,
-and embedding. Use a non-production database when validating ingestion.
-
-### Testing and evaluation
-
-Run offline tests and Python lint checks:
-
-```powershell
-& .\.venv\Scripts\python.exe -m pytest -q
-& .\.venv\Scripts\ruff.exe check --isolated --select E4,E7,E9,F821 `
-  src/agent src/api src/application src/db src/platform src/retrieval `
-  src/evaluation/evaluate_integrated_agent.py `
-  src/evaluation/dataset_manifest.py src/evaluation/regression_gate.py `
-  src/evaluation/compare_baselines.py src/evaluation/human_grounded_evaluation.py `
-  src/evaluation/independent_retrieval_evaluation.py src/evaluation/llm_judge.py `
-  src/evaluation/run_simple_baseline.py src/evaluation/run_trivial_baseline.py `
-  tests/test_agent_config.py tests/test_agent_context.py `
-  tests/test_agent_orchestrator.py tests/test_integrated_evaluation.py `
-  tests/test_evaluation_reporting.py tests/test_phase4_evaluation_controls.py `
-  tests/test_phase5_quality.py tests/test_phase6_human_evaluation.py `
-  tests/test_independent_retrieval_evaluation.py `
-  tests/test_reply_generator.py tests/test_historical_retriever.py `
-  tests/test_platform_api.py tests/test_platform_foundation.py `
-  tests/test_rate_limit.py tests/test_retrieval_backends.py `
-  tests/test_staff_provisioning.py tests/test_retention.py
-& .\.venv\Scripts\python.exe -m src.evaluation.regression_gate `
-  --baseline tests/fixtures/evaluation_baseline.json `
-  --candidate tests/fixtures/evaluation_candidate.json `
-  --thresholds configs/evaluation_regression_thresholds.json
-docker compose config --quiet
-```
-
-The tests use fake AI and embedding providers; no paid API key is required.
-Frontend validation is `npm run typecheck`, then
-`$env:NEXT_PUBLIC_API_BASE_URL="http://localhost:8000"; npm run build` for local
-development, and `npm audit`. GitHub Actions runs Python lint/tests, a Python
-dependency audit, and frontend audit/typecheck/build. The current Python
-dependency audit checks the installed development and optional embedding
-dependencies with one explicit exception: NLTK 3.10.3 is the latest available
-release and is flagged by `PYSEC-2026-3740`; the vulnerable model-artifact APIs
-are not used. NLTK and evaluation-only packages are excluded from the backend
-runtime image. Revisit the exception when an upstream fix is available.
-
-### Independent retrieval relevance
-
-The historical retrieval `intent-match@k` figures are heuristic proxies, not
-human relevance metrics. A separate 50-query/250-candidate workflow is
-documented in
-[`reports/evaluation/independent_retrieval_evaluation.md`](reports/evaluation/independent_retrieval_evaluation.md).
-It exports two blank reviewer files, validates them against the frozen query
-and retrieval artifact, requires adjudication for disagreements, and only then
-computes Recall@1/3/5, MRR, and graded nDCG@1/3/5. Export refuses to replace
-existing files:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.retrieval_relevance_workflow export
-& .\.venv\Scripts\python.exe -m src.evaluation.retrieval_relevance_workflow validate `
-  --submission reports\evaluation\human_annotation_exports\retrieval-relevance-reviewer-01.jsonl
-& .\.venv\Scripts\python.exe -m src.evaluation.retrieval_relevance_workflow validate `
-  --submission reports\evaluation\human_annotation_exports\retrieval-relevance-reviewer-02.jsonl
-```
-
-After both independent review files are complete, adjudicate and evaluate with
-the exact commands and optional exclusion handling in the linked protocol.
-Currently the templates are blank and independent retrieval metrics are
-**NOT MEASURED**.
-
-Historical component benchmarks below remain distinct from the integrated
-runtime harness. To run an offline deterministic evaluation, prepare the local
-corpus and run:
-
-```powershell
-python -m src.evaluation.evaluate_integrated_agent --mock --limit 10
-```
-
-Mock mode is the default, even when `--mock` is omitted. The fixed mock asks
-for human review and makes no model API calls; its generation metrics do not
-measure a model. Live evaluation requires explicit `--live`, an explicit
-`--limit` from 1 through 20, and configured provider credentials:
-
-```powershell
-python -m src.evaluation.evaluate_integrated_agent --live --limit 10
-```
-
-Each invocation writes unique per-example, summary, and content-minimized
-failure artifacts under the ignored `reports/evaluation/runs/` directory.
-Dataset hash/schema drift fails closed. Run metadata includes dataset,
-evaluator, prompt, retrieval, provider/model, mode, configuration, latency,
-and metric versions. Dataset fingerprint and provenance caveat are in
-`reports/evaluation/evaluation_dataset_manifest.json`.
-
-#### Phase 4 experiment protocol
-
-Run the same frozen dataset through the unchanged majority and TF-IDF +
-Logistic Regression baselines and Assistly runtime:
-
-```powershell
-# Deterministic provider; requires the prepared local corpus and configured local DB.
-python -m src.evaluation.compare_baselines --mode mock
-
-# Explicitly live model run, capped to 20 examples; may incur provider cost.
-python -m src.evaluation.compare_baselines --mode live --limit 10
-```
-
-The command produces uniquely named JSON and Markdown outputs. Baseline
-definitions are unchanged. Result sections keep deterministic baselines,
-mock/live runtime results, judge results, and human-audit results separate; it
-does not compute an aggregate score that mixes them. `--limit N` is for diagnostic subsets only and is recorded in run metadata.
-Live comparison requires an explicit limit from 1 through 20.
-
-Every integrated run records an evaluation ID, UTC timestamp, available Git
-revision, frozen dataset version/hash/provenance state, evaluation schema,
-evaluator, prompt, and retrieval versions, provider/model, retrieval backend,
-resolved non-secret configuration, metric values/denominators, and latency
-summaries. Token usage and cost are `null` unless a provider actually reports
-them. Failure artifacts contain IDs, intent labels, evidence IDs/status,
-decision, grounding status, failure category, and evaluator version—not
-customer message, conversation, prompt, draft, or rationale text.
-Categories distinguish ambiguous/wrong intent, retrieval mismatch, insufficient
-or conflicting evidence, unsupported/unsafe output, escalation mistakes,
-context confusion, provider errors, malformed output, and prompt-injection
-handling where an observable failure signal exists. The category is diagnostic,
-not an adjudicated root-cause label.
-
-Metric interpretation:
-
-- Intent accuracy is exact matches / evaluated examples. Macro-F1 averages the
-  per-class F1 for target and predicted labels. Both remain provisional because
-  label provenance is unresolved.
-- Same-intent retrieval Recall@1/3/5 and MRR are **heuristic proxies**: retrieved
-  historical messages are assigned intent by the existing local taxonomy.
-  They are not independent relevance judgments. Real retrieval relevance
-  Recall@K/MRR are not measured until a relevance set is independently labeled.
-- Evidence-sufficiency accuracy and adjudicated escalation precision/recall
-  remain `null` without independent labels. A deterministic policy violation
-  check is reported separately and is not called adjudicated precision.
-- Evidence conflict, intent-match, and resolution-match rates are labeled
-  heuristic signals with their observed denominators; none are human relevance
-  or sufficiency judgments.
-- Groundedness is the share of returned grounding assessments marked supported.
-  Unsupported-claim draft rate is the number of generated drafts with one or
-  more unsupported specific claims divided by generated drafts with a grounding
-  result. The lexical grounding checker is a diagnostic, not factual truth.
-- Error/provider-failure rates use all evaluated examples as denominator;
-  provider retry count remains unavailable when the SDK does not expose actual
-  internal attempts. Latencies report the count, mean, median, and p95 of
-  observed samples for each stage and total.
-
-#### Deterministic evaluation snapshot
-
-The Phase 5 verification run evaluated all 220 examples from
-`assistly-golden-220-v1` (`2a80bd3c...b523b81`, provenance
-`unresolved_provisional`). These results are reproducible pipeline diagnostics
-against provisional labels, not human-ground-truth or live-model quality:
-
-| System | Run class | Accuracy | Macro-F1 | Same-intent Recall@1 / @3 / @5 (proxy) | Groundedness | Unsupported-claim drafts |
-|---|---|---:|---:|---:|---:|---:|
-| Majority baseline | deterministic baseline | 0.2409 (53/220) | 0.0353 | not measured | not measured | not measured |
-| TF-IDF + Logistic Regression | deterministic baseline | 0.4955 (109/220) | 0.5353 | not measured | not measured | not measured |
-| Assistly runtime | deterministic mock | 0.6409 (141/220) | 0.6622 | 0.3136 / 0.4727 / 0.5455 | 0.1000 (9/90) | 0/90 |
-
-Assistly's same-intent MRR proxy was 0.4007 (mean reciprocal rank over 220
-examples). Evidence-sufficiency accuracy and adjudicated escalation
-precision/recall remain unavailable (`null`).
-Mock error and provider-failure rates were 0/220; these do not estimate live
-provider reliability. The deterministic lexical mock judge separately scored
-overall 4.3530/5, with unsupported-claims 4.9455/5; these scores are not
-ground truth, are computed over the judge's configured input artifact rather
-than this runtime run's replies, and are not combined with runtime metrics.
-Machine-specific latency values remain in each ignored run artifact rather
-than being presented as general performance claims.
-
-Regression gates compare only runs with matching dataset and manifest
-hash/version,
-evaluation schema, evaluator, prompt, retrieval version, evidence-policy
-version, backend, configuration, and run mode. The topic-aware evidence policy
-is versioned as `assistly-evidence-policy-v2`; the integrated evaluator is
-`integrated-evaluator-v4`. Older reports are intentionally incompatible with
-new runs. Thresholds are maintained in
-`configs/evaluation_regression_thresholds.json`; missing configured metrics or
-incompatible identities fail closed:
-
-```powershell
-python -m src.evaluation.regression_gate --baseline path\to\baseline.json --candidate path\to\candidate.json
-```
-
-CI exercises the gate with deterministic fixtures only and does not need
-provider credentials. Judge rubric/prompt versions are recorded separately;
-the deterministic mock judge is a lexical diagnostic, never ground truth.
-Judge artifacts retain categorical reason codes and scores, not chain-of-thought.
-Live judge output is distinct from mock and human audit data. Existing human
-audit artifacts may be described only with their original documented scope;
-this workflow does not manufacture new annotations or agreement statistics.
-
-The versioned future annotation contract is
-`reports/evaluation/annotation_schema_v1.json`. It supports expected intent,
-per-evidence relevance, evidence sufficiency/conflict, expected escalation,
-acceptable-answer criteria, and unsupported-claim flags without changing the
-frozen CSV. It is a schema only: no new human annotations or adjudications were
-performed in this phase. Keep annotator identities and free-text notes outside
-tracked artifacts under access controls.
-
-#### Phase 6: Human-grounded evaluation workflow
-
-Phase 6 adds a separate 50-example, ID-only sample manifest at
-`reports/evaluation/human_annotation_sample_v1.json`, bound to the frozen CSV
-hash. It is sampled by a versioned hash ordering independent of provisional
-intent labels. The v2 submission and adjudication contracts are
-`reports/evaluation/annotation_schema_v2.json` and
-`reports/evaluation/adjudication_schema_v1.json`. No labels have been submitted
-for this subset and no human agreement or quality metric is available yet.
-
-Create a separate file for each pseudonymous annotator. The template contains
-only stable example IDs and empty labels; use an approved, access-controlled
-review interface to view source examples and evidence rather than copying
-customer text into the annotation export. Existing output paths are protected
-from accidental replacement; pass `--overwrite` only when intentionally
-replacing a template or merged file:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation create-template `
-  --sample reports/evaluation/human_annotation_sample_v1.json `
-  --annotator-id reviewer-01 `
-  --output reports/evaluation/human_annotation_exports/reviewer-01.jsonl
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation create-template `
-  --sample reports/evaluation/human_annotation_sample_v1.json `
-  --annotator-id reviewer-02 `
-  --output reports/evaluation/human_annotation_exports/reviewer-02.jsonl
-```
-
-Annotators independently label expected intent, evidence relevance
-(`0=irrelevant`, `1=partial`, `2=direct`), evidence sufficiency, expected
-escalation, acceptable-answer criteria, and unsupported-claim allowance.
-Each annotator edits their own export independently. Run-specific response reviews are a `response_assessments` list, so a reviewer
-can assess multiple systems for the same example without creating duplicate
-example/annotator records. Each assessment names its run ID and human labels
-answer quality, groundedness, and unsupported claims. The reviewed output must
-be presented to the annotator through an approved access-controlled channel;
-evaluation and failure artifacts do not store generated replies. Do not infer
-expected escalation from the agent's choice. Merge the independent exports,
-validate the combined records, and inspect workflow coverage:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation merge `
-  --annotations reports/evaluation/human_annotation_exports/reviewer-01.jsonl `
-               reports/evaluation/human_annotation_exports/reviewer-02.jsonl `
-  --output reports/evaluation/human_annotation_exports/combined.jsonl
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation validate `
-  --annotations reports/evaluation/human_annotation_exports/combined.jsonl
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation agreement `
-  --annotations reports/evaluation/human_annotation_exports/combined.jsonl
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation coverage `
-  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
-  --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
-  --exclusions reports/evaluation/human_annotation_exports/exclusions.jsonl `
-  --output reports/evaluation/human_grounded_runs/annotation_coverage.json
-```
-
-If no adjudication or exclusion file exists yet, omit the corresponding option.
-Use `exclude` to append a privacy-minimized exclusion decision with a closed
-reason code; free-text customer notes and real names are not accepted:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation exclude `
-  --example-id golden-set-0007 `
-  --excluded-by review-lead `
-  --reason source_unavailable `
-  --output reports/evaluation/human_annotation_exports/exclusions.jsonl
-```
-
-For each example with at least two complete, independent submissions, an
-adjudicator supplies a JSON object containing all `final_labels` fields from
-the adjudication schema and records it separately:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation adjudicate `
-  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
-  --example-id golden-set-0007 `
-  --adjudicator-id review-lead `
-  --final-labels reports/evaluation/human_annotation_exports/golden-set-0007-final-labels.json `
-  --output reports/evaluation/human_annotation_exports/adjudicated.jsonl
-```
-
-The tooling reports Cohen's kappa for two annotators, Fleiss' kappa for three
-or more balanced categorical ratings, and quadratic-weighted Cohen's kappa
-for ordinal relevance from two annotators. It separately lists disagreements;
-an adjudicator records final labels in a separate adjudication artifact.
-Incomplete, uncertain, and non-adjudicated records are not counted as
-ground-truth labels.
-
-The checked-in generated-reply artifact has been migrated to
-`assistly-reply-generation-v2`. It retains example IDs, provisional intent,
-support resolutions, retrieval metadata, and generated replies, but removes
-customer-message fields and customer identifiers. Exact source-message echoes,
-email addresses, common API-key formats, bearer tokens, and US-style phone
-numbers are redacted from retained free text. To sanitize a legacy artifact
-without replacing it, first write a separate copy and inspect its record count
-and privacy checks:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.generate_golden_replies `
-  --sanitize-legacy `
-  --input reports/evaluation/golden_reply_generations.jsonl `
-  --output reports/evaluation/golden_reply_generations.sanitized.jsonl
-```
-
-Migration fails closed on malformed, duplicate, or incomplete records. The
-`--output` path defaults to the input only when omitted; use that only for an
-intentional, backed-up in-place migration. Reply-quality consumers continue to
-read the v2 record shape. The judge hydrates customer text from the verified
-frozen CSV in memory by example ID and does not write it to the judge artifacts.
-Offline grounding metric v2 counts only historical support replies as evidence;
-historical customer messages do not validate a generated answer. This remains
-a lexical diagnostic, not factual verification.
-
-To evaluate the three systems in an existing comparison against actual
-adjudications, use the command below. Runtime response reviews use the Assistly
-run ID; baseline review IDs are the comparison run ID suffixed with
-`:majority` or `:tfidf_logistic_regression`.
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.human_grounded_evaluation compare-systems `
-  --comparison reports/evaluation/runs/<run-id>.comparison.json `
-  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
-  --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
-  --output reports/evaluation/human_grounded_runs/<run-id>.json
-```
-
-Human Recall@K and MRR use only evidence IDs with independent relevance scores
-above zero. Evidence sufficiency and escalation precision/recall use only
-adjudicated labels. Response quality/groundedness/unsupported-claim measures
-require a human assessment tied to that exact run ID. Metrics without valid
-labels or matching assessments stay `null`; token usage and estimated cost
-also stay unavailable unless provider responses actually expose the values.
-Each human report records the frozen-data identity, annotation sample hash,
-annotation/adjudication hashes, evaluator and prompt versions, backend,
-provider/model, mode, and example count. the regression gate rejects mismatched identities and metric denominators. No
-human metric threshold is enabled until adjudicated data exists.
-
-#### Phase 7: Independent retrieval evaluation and integrity
-
-Privacy remediation and the Phase 8 evidence-policy changes are summarized in
-[`phase8_quality_notes.md`](reports/evaluation/phase8_quality_notes.md). The
-tracked generated-reply JSONL is now versioned and privacy-minimized; the
-frozen source CSV remains unchanged.
-
-The existing `python -m src.evaluation.evaluate_retrieval` report remains a
-taxonomy `intent-match@k` **heuristic proxy**, not retrieval relevance ground
-truth. Independent retrieval metrics are calculated separately by
-`src.evaluation.independent_retrieval_evaluation` and require adjudicated
-`evidence_relevance` scores. Use per-system JSONL rows containing only
-`example_id` and the ranked `evidence_source_ids` output (plus optional
-operational `evidence_status`) so every retriever is scored on the same
-adjudicated query set:
-
-```powershell
-& .\.venv\Scripts\python.exe -m src.evaluation.independent_retrieval_evaluation `
-  --annotations reports/evaluation/human_annotation_exports/combined.jsonl `
-  --adjudications reports/evaluation/human_annotation_exports/adjudicated.jsonl `
-  --exclusions reports/evaluation/human_annotation_exports/exclusions.jsonl `
-  --run tfidf=reports/evaluation/human_annotation_exports/tfidf-ranked.jsonl `
-  --run hybrid=reports/evaluation/human_annotation_exports/hybrid-ranked.jsonl `
-  --output reports/evaluation/human_grounded_runs/retrieval.json `
-  --failures reports/evaluation/human_grounded_runs/retrieval-failures.json
-```
-
-Omit `--exclusions` if there is no exclusion file. Recall@K is macro query-level
-recall over judged-positive IDs; MRR uses the first judged-positive rank and
-nDCG uses relevance grades 1/2. A missing system row counts as a failed result
-and contributes zero for an otherwise eligible labeled query. Adjudicated
-examples with no positive relevance judgment and explicitly excluded examples
-are outside the retrieval denominator and counted separately. Unjudged corpus
-items are not assumed irrelevant. The evaluator records dataset, annotation,
-adjudication and exclusion hashes, and its output/failure artifacts contain
-identifiers and metrics only. If human annotations are absent, independent
-retrieval performance is **NOT MEASURED**.
-
-The current environment has no completed annotation/adjudication export. The
-frozen dataset's populated `human_intent` values remain provisional because
-their provenance is unresolved. Model-list discovery confirmed
-`models/gemini-3.8-flash` exposes `generateContent`; the last authorized single
-generation diagnostic returned sanitized HTTP 503 `UNAVAILABLE` (high demand).
-No 20-example live evaluation has been run; live-model quality remains
-**NOT MEASURED**. Phase 7 offline testing uses deterministic mocks only.
-
-Annotation exports, adjudications, human reports, and human failure summaries
-are Git-ignored. The new tracked manifest contains IDs only; no customer text,
-replies, prompts, rationale, or real-world annotator identities are added to
-new artifacts. The Phase 5 `--live --limit N` flow remains the only live
-runtime path: it is off by default, explicitly opt-in, capped at 20 examples,
-and uses `SUPPORT_AGENT_PROVIDER` (`gemini` or `openai`) plus
-`SUPPORT_AGENT_MODEL`, `SUPPORT_AGENT_TIMEOUT_SECONDS`, and
-`SUPPORT_AGENT_MAX_RETRIES`. Provider-specific rate limiting remains in the
-existing adapter. Earlier single-request smoke diagnostics confirmed model
-discovery but received sanitized HTTP 503 `UNAVAILABLE` on generation. The
-20-example live evaluation remains unrun and
-`LIVE_PROVIDER_EVAL = NOT RUN`. Historical heuristic, deterministic mock,
-human-grounded, and live-provider results remain separate classes.
-
----
-
-## Reproducing Headline Results
-
-This repository does not provide a single pipeline entry point. Instead, it
-exposes the actual module-level commands used to reproduce or inspect the
-evaluation artifacts. Those commands are intentionally separated into:
-
-- A. Offline inspection of checked-in evaluation artifacts
-- B. Raw-data preparation and model-output regeneration
-- C. Optional live Gemini judge
-
-This is the smallest honest reproduction path and avoids implying that the
-entire cold-start workflow is guaranteed to finish in under 15 minutes.
-
-### A. Offline inspection of checked-in evaluation artifacts
-
-After installing dependencies, these commands inspect the checked-in generated
-reply and evaluation artifacts without live model calls:
-
-```bash
-# Offline reply-quality metrics and deterministic lexical diagnostics
-python -m src.evaluation.reply_quality
-python -m src.evaluation.llm_judge
-
-# Final consolidated report
-python -m src.evaluation.generate_final_report
-```
-
-These commands read the checked-in generated-reply checkpoint, golden set, and
-evaluation inputs. The checked-in reports allow a reviewer to inspect the
-headline results without rerunning live API calls.
-
-### B. Raw-data preparation and model-output regeneration
-
-For a fresh data-to-evaluation run, the dependency chain is:
-
-```text
-raw Kaggle data
-  -> AmazonHelp validation and preparation
-  -> data/interim/amazonhelp_conversations.csv
-  -> baselines, retrieval evaluation, and reply generation
-```
-
-Run the existing preparation command before downstream commands that depend on
-the interim conversation-pair file:
-
-```bash
-# Install dependencies
-python -m pip install -r requirements.txt
-
-# Download raw Kaggle data
-kaggle datasets download -d thoughtvector/customer-support-on-twitter -p data/raw --unzip
-
-# Validate the selected brand and create the interim AmazonHelp pairs
-python -m src.data.inspect_dataset --brand AmazonHelp
-python -m src.intents.discover_intents
-
-# Component evaluations using the prepared interim file
-python -m src.evaluation.run_trivial_baseline
-python -m src.evaluation.run_simple_baseline
-python -m src.evaluation.evaluate_retrieval
-```
-
-Regenerating missing model outputs is not an offline step. The checked-in
-Gemini-produced checkpoint remains the source for the reported evaluation.
-Regeneration is a new run, not an exact reproduction of that checkpoint, and
-uses the current configured Gemini model:
-
-```powershell
-$env:GEMINI_API_KEY="your-key"
-$env:SUPPORT_AGENT_MODEL="gemini-3.8-flash"
-python -m src.evaluation.generate_golden_replies --limit 220 --k 5
-```
-
-Do not commit the key. The checked-in `golden_reply_generations.jsonl` is the
-artifact used for the reported evaluation and does not need regeneration to
-inspect the results.
-
-### C. Optional live Gemini judge
-
-The real 220-example Gemini judge is a separate optional step and requires a live
-API setup. It is not part of the offline deterministic evaluation path.
-
-Required environment variable:
-- `GEMINI_API_KEY` for the live Gemini judge
-- `SUPPORT_AGENT_MODEL` can select the configured model if needed
-
-```powershell
-$env:SUPPORT_AGENT_MODEL="gemini-3.8-flash"
-& .\.venv\Scripts\python.exe -m src.evaluation.llm_judge --live --limit 20
-```
-
-This optional step is capped at 20 examples by the CLI and requires separate
-authorization before use. It depends on external API access, rate limits, and
-the availability of the generated reply checkpoint. The checked-in Gemini
-artifacts are available for inspection, so rerunning this step is not needed
-to reproduce offline diagnostics. Live Gemini quality for the current milestone
-was not evaluated.
-
-### Important reproducibility note
-
-- The repository provides reproducible module-level commands for the evaluation
-  workflow.
-- The raw Kaggle download and live Gemini judge are external, variable-cost steps.
-- A fresh reviewer should not assume a guaranteed cold-start runtime under 15
-  minutes; the repository is honest about the fact that live API work and dataset
-  preparation are environment-dependent.
-- The checked-in artifacts allow the 220-example automated evaluation and final
-  report to be inspected without re-running the live judge.
-
-### Offline reply evaluation
-
-The generated reply checkpoint can be evaluated without credentials or network
-access. The commands below only read the existing JSONL and annotation files;
-they do not rewrite raw, golden, interim, or generated data:
-
-```bash
-python -m src.evaluation.reply_quality
-python -m src.evaluation.llm_judge                  # deterministic smoke-test judge
-python -m src.evaluation.human_agreement --secondary path/to/second_annotations.csv
-python -m src.evaluation.generate_final_report
-# Or compute agreement while building the final report:
-python -m src.evaluation.generate_final_report --secondary-annotations path/to/second_annotations.jsonl
-```
-
-`reply_quality` reports deterministic reply presence, length, lexical reference
-overlap (when the historical response is available), and evidence/grounding
-checks. `llm_judge` accepts precomputed structured judgements with
-`--judgements` or an injected driver in Python; it never makes a live call by
-default. Human agreement aligns rows by `example_id` (or an explicit ID field)
-and reports raw agreement and Cohen's kappa. Lexical grounding and reference
-overlap are diagnostics, not proof of factual correctness.
-
-## Tests
-
-Run the complete test suite from the repository root:
+| GET | `/health` | Liveness |
+| GET | `/health/ready` | Database readiness |
+| POST | `/api/v1/auth/register` | Register customer |
+| POST | `/api/v1/auth/token` | Obtain bearer token |
+| POST, GET | `/api/v1/conversations` | Create/list permitted conversations |
+| GET | `/api/v1/conversations/{id}` | Read an authorized conversation |
+| GET, POST | `/api/v1/conversations/{id}/messages` | Read messages / submit message with idempotency key |
+| POST | `/api/v1/agent/respond` | Explicit agent response flow; customer role |
+| GET, POST | `/api/v1/tickets` and `/api/v1/tickets/{id}/...` | Agent/admin human-review queue and transitions |
+| POST | `/api/v1/feedback` | Customer feedback |
+| GET | `/api/v1/analytics` | Admin database analytics |
+| GET | `/api/v1/metrics` | Admin-only process-local operational metrics |
+
+Explore the full request/response schemas at `/api/docs`. Tokens are short-lived HS256 bearer tokens; passwords are PBKDF2-hashed. There is no token refresh/revocation flow or external identity provider. Production deployments require a strong JWT secret, appropriate CORS configuration, secrets management, and operational controls.
+
+## Testing and CI
+
+Run checks from the repository root:
 
 ```bash
 python -m pytest -q
 ```
 
-Tests use deterministic local data and injected providers; they do not require
-live Gemini or OpenAI calls. The integrated-agent tests exercise the request
-through intent detection, retrieval, generation, grounding, policy, and final
-structured response, including fail-closed error cases.
+The GitHub Actions workflow also runs:
 
-## Evaluation status and caveats
+- Ruff on the scoped Python source and test paths
+- `pip-audit` with a documented, scoped vulnerability exception
+- Evaluation regression gate
+- Alembic migrations against SQLite in CI
+- Python test suite
+- `npm audit --audit-level=moderate`
+- Frontend TypeScript type-check
+- Next.js production build
 
-The reports under `reports/evaluation/` are historical, checked-in
-component-level evaluation artifacts. They are not measurements of the new
-end-to-end runtime agent. The historical report records 24.09% majority
-baseline accuracy, 49.55% accuracy / 53.53% macro-F1 for TF-IDF plus Logistic
-Regression, and retrieval intent-match@1/@3/@5 of 31.82% / 48.64% / 56.82%.
-These values are preserved as reported; this implementation milestone did not
-re-run or alter those benchmark methodologies.
+[See current CI runs](https://github.com/amaan-mansoori/assistly-ai-support-agent/actions). Passing CI means the configured automated checks passed; it does not mean every external service, optional vector backend, or production deployment is verified.
 
-The 220-row golden CSV has 220 populated intent labels, but the repository's
-annotation-status note says its worksheet is blank and annotation-ready, while
-the AI-proposal note says its labels are AI-proposed; other evaluation text
-calls them human-reviewed. This contradiction is unresolved. The labels must
-not be described as verified human labels. See
-[the provenance note](reports/golden_set_provenance.md). The separate 50-row
-human-audit artifacts remain separate and do not establish provenance for the
-220-row golden set.
+## Repository map
 
-The 49.55% / 53.53% classifier result is an offline TF-IDF + Logistic
-Regression baseline. The runtime currently uses a deterministic ordered-regex
-taxonomy and reports no calibrated intent confidence. The integrated-agent
-harness is separate and has not been run for this milestone; no new integrated
-benchmark metrics are claimed.
+```text
+assistly-ai-support-agent/
+├── src/
+│   ├── agent/          # Orchestration, intent, evidence, grounding, generation, escalation
+│   ├── api/            # FastAPI routes, schemas, auth/security, middleware
+│   ├── application/    # Conversation, support, ticket, feedback, analytics services
+│   ├── db/             # SQLAlchemy persistence models and database setup
+│   ├── data/           # Dataset inspection, provenance checks, AmazonHelp preparation
+│   ├── intents/        # Intent discovery and taxonomy audit/refinement
+│   ├── retrieval/      # TF-IDF, vector, hybrid retrievers and knowledge ingestion
+│   ├── evaluation/     # Baselines, reports, judge workflow, regression gate
+│   └── platform/       # Settings, rate limiting, user provisioning, retention
+├── frontend/           # Next.js customer and staff dashboard
+├── configs/            # Runtime and regression-gate configuration
+├── alembic/            # Versioned database migrations
+├── data/golden/        # Frozen evaluation artifacts; inspect provenance notes
+├── reports/            # Evaluation, data selection, audits, design decisions
+├── tests/              # Python unit/integration and evaluation tests
+├── Dockerfile
+├── compose.yaml
+└── .github/workflows/ci.yml
+```
 
-## Current scope and limitations
+## Resume-ready project entry
 
-Implemented here: the independently callable AI core; FastAPI platform;
-SQLAlchemy/Alembic persistence; customer authentication and staff RBAC;
-conversation, ticket, feedback and analytics workflows; message idempotency;
-optional Redis rate limiting; TF-IDF and optional pgvector retrieval;
-knowledge-ingestion tooling; Next.js customer/staff dashboard; Docker Compose;
-CI; process-local metrics; retention preview/explicit purge; and a separate
-integrated-agent evaluation harness.
+Copy the version that matches what you have actually run and can explain in an interview.
 
-Still limited or unverified: this is a production-oriented foundation, not a
-production-ready service. No PostgreSQL/pgvector container was run in this
-environment, no live integrated-agent evaluation was performed, and vector
-retrieval quality has not been compared on measured outcomes. Runtime metrics
-are process-local, Redis fallback limits are per process, there is no automated
-retention scheduler, external identity provider, token revocation, backup/DR,
-or hosted deployment. Retrieval and grounding remain lexical/heuristic rather
-than proof of truth. Human-label provenance for the 220-row set remains
-unresolved. Treat automatic replies as eligible drafts under a conservative
-policy, not guaranteed correct answers.
+**Assistly — AI Customer Support Platform** | Python, FastAPI, scikit-learn, PostgreSQL/pgvector, SQLAlchemy, Alembic, Redis, Next.js, TypeScript, Docker
 
-## Engineering tradeoffs
+- Built a full-stack AI-assisted support platform with a Python agent core, FastAPI REST APIs, and a Next.js dashboard for customer conversations, support-ticket workflows, and admin analytics.
+- Implemented a retrieval-grounded response pipeline combining intent detection, historical support-response retrieval, structured provider output validation, grounding diagnostics, and conservative human escalation.
+- Designed configurable TF-IDF, optional pgvector/FastEmbed semantic, and weighted hybrid retrieval backends with frozen evaluation-data exclusion and duplicate-text filters.
+- Added authenticated role-based APIs, SQLAlchemy persistence, Alembic migrations, idempotent message submission, configurable rate limiting, health/readiness endpoints, and retention preview/explicit purge tooling.
+- Built offline evaluation and regression tooling; historical TF-IDF + Logistic Regression intent baseline reported 49.55% accuracy and 53.53% macro-F1 against provisional reference labels (label provenance unresolved).
+- Added CI for Python tests/lint/security checks and frontend audit/type-check/build; the repository’s latest recorded CI run passed both Python and frontend jobs.
 
-| Choice | Why it is used | Cost or limitation |
-|---|---|---|
-| TF-IDF baseline vs. pgvector | Reproducible, lightweight lexical baseline alongside a semantic backend that fits the existing retrieval interface | Semantic retrieval adds PostgreSQL, model-download, and CPU-inference requirements; no quality win is assumed without evaluation |
-| SQLite vs. PostgreSQL | SQLite supports fast local tests; PostgreSQL is the durable platform database and supports pgvector | SQLite does not validate all PostgreSQL behavior; deployment migrations and extensions need PostgreSQL testing |
-| Mock provider vs. live provider | Deterministic tests and smoke runs need no credentials, network, or API spend | Mock output is not evidence of live-model quality |
-| Auto-handle vs. human review | Evidence, grounding, sensitive-intent, and provider checks gate customer-facing drafts | Conservative policy increases review workload; it does not guarantee every auto-handled answer is correct |
-| CPU embeddings vs. GPU | ONNX Runtime CPU keeps local and Docker installs practical and avoids Torch/CUDA | CPU embedding throughput is lower than a suitable GPU for large ingestion jobs |
+**ATS keywords supported by this codebase:** Python, FastAPI, REST API, scikit-learn, TF-IDF, information retrieval, LLM integration, prompt-injection risk controls, structured output validation, human-in-the-loop, PostgreSQL, pgvector, SQLAlchemy, Alembic, Redis, JWT, role-based access control (RBAC), idempotency, rate limiting, Next.js, React, TypeScript, Docker Compose, pytest, CI/CD, evaluation, regression testing.
 
----
+Do not describe the historical baseline figures as validated human-ground-truth accuracy. Do not state that PostgreSQL/pgvector or the entire production stack has been deployed unless you have run and verified it.
 
-## Development Milestones
+## Known limitations
 
-- [x] Project structure & scaffold
-- [x] Dataset inspection & brand selection
-- [x] Data cleaning & thread reconstruction
-- [x] Intent discovery (clustering)
-- [x] Golden evaluation set created (label provenance unresolved; see [provenance note](reports/golden_set_provenance.md))
-- [x] Retrieval system (similar conversations)
-- [x] Integrated agent core (classify → retrieve → gate → draft → ground → decide)
-- [x] Baseline implementations (trivial + simple)
-- [x] Evaluation harness (metrics + LLM judge)
-- [x] Judge vs. human agreement analysis
-- [x] Failure analysis (5 real failure modes)
-- [x] Final report with "What is misleading about my headline number?"
-- [x] Decision log (10-15 non-obvious decisions)
-- [x] FastAPI, SQLAlchemy models and Alembic migrations
-- [x] Persisted conversations, agent runs, feedback and human-review tickets
-- [x] Authentication, roles, idempotency and configurable rate limiting
-- [x] Optional pgvector retrieval and reproducible knowledge ingestion
-- [x] Customer chat, support queue and database-backed analytics UI
-- [x] Local Docker Compose and CI workflow
-- [x] Separate provisional integrated-agent evaluation harness
+- The 220-row frozen golden set has unresolved label provenance; it must not be described as verified human-labelled ground truth.
+- Independent retrieval relevance metrics (Recall@K, MRR, nDCG) are not measured because independent relevance judgments and adjudication are not complete.
+- Historical component evaluations are not an end-to-end integrated-agent benchmark. A fresh live-provider evaluation is not established as completed.
+- TF-IDF is the default reproducible backend. Vector/hybrid retrieval needs PostgreSQL/pgvector, FastEmbed, a compatible 384-dimensional model, and may need a model download.
+- Full PostgreSQL/pgvector and complete Docker Compose runtime behavior have not been independently verified by the reported offline checks.
+- Grounding and evidence consistency use lexical/heuristic checks, not a formal entailment model or guarantee of truth.
+- Metrics are process-local; Redis fallback rate limits are local to a process. There is no external identity provider, token revocation/refresh flow, automated retention scheduler, or documented backup/disaster-recovery setup.
+- No hosted production deployment is claimed.
 
----
+## Project documentation
 
-## Design Principles
+| Document | What it covers |
+|---|---|
+| [Brand selection](reports/brand_comparison.md) | Why AmazonHelp was selected from the inspected dataset |
+| [AmazonHelp validation](reports/amazonhelp_validation.md) | Source-pair linkage, threads, response heuristics, and feasibility |
+| [Decision log](reports/decision_log.md) | Engineering trade-offs and rationale |
+| [Final evaluation](reports/evaluation/final_evaluation.md) | Stored component evaluations and interpretation |
+| [Intent baseline](reports/evaluation/simple_baseline.md) | TF-IDF + Logistic Regression results |
+| [Retrieval evaluation](reports/evaluation/retrieval_evaluation.md) | Historical intent-match proxy and caveats |
+| [Golden-set provenance](reports/golden_set_provenance.md) | Unresolved label provenance and frozen-data identity |
+| [Independent retrieval evaluation](reports/evaluation/independent_retrieval_evaluation.md) | Two-reviewer protocol for retrieval relevance |
+| [End-to-end audit](reports/evaluation/end_to_end_audit_2026-10-09.md) | Runtime and integration audit findings |
 
-1. **Simple over clever** — readable code a student can explain line-by-line.
-2. **Reproducible** — fixed random seeds, pinned dependencies, config files.
-3. **No hardcoded secrets** — all API keys via environment variables.
-4. **Honest evaluation** — explicit failure analysis and misleading-metric disclosure.
+## Design principles
+
+1. **Evidence before fluency:** retrieve and assess historical support evidence before using it to draft.
+2. **Fail closed:** uncertain, sensitive, malformed, or unsupported cases should be reviewed rather than treated as safe successes.
+3. **Reproducibility:** freeze dataset identity, document commands, separate baselines, and gate incompatible regression artifacts.
+4. **Honest measurement:** distinguish heuristic proxies, stored historical outputs, human judgments, and live evaluation.
+5. **Security boundaries:** environment-based credentials, role checks, bounded context, idempotency, and content-minimized operational logs.
