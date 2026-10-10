@@ -163,6 +163,16 @@ The following numbers are **historical component-level artifacts** in the reposi
 
 See [the detailed evaluation report](reports/evaluation/final_evaluation.md), [classifier baseline](reports/evaluation/simple_baseline.md), [retrieval report](reports/evaluation/retrieval_evaluation.md), and [independent retrieval protocol](reports/evaluation/independent_retrieval_evaluation.md).
 
+## Dataset attribution and licensing
+
+This project uses derived examples from the [Customer Support on Twitter dataset](https://www.kaggle.com/datasets/thoughtvector/customer-support-on-twitter) by Thought Vector and collaborators. The Kaggle dataset page lists **CC BY-NC-SA 4.0** and states that commercial applications or use of the full dataset require contacting the dataset maintainer. Review the upstream terms before redistributing derived data or using it commercially; this README is not legal advice.
+
+The dataset license should not be assumed to license this repository's source code. **No code license is currently specified for this repository.** Until a code license is added, others should not assume they have permission to reuse the code under an open-source license.
+
+The repository contains a small amount of tracked, derived evaluation content. Some examples include source conversation text or pseudonymous Twitter-style handles, and an analysis document names individual audit participants. Before sharing the repository more widely, confirm that publication of those artifacts is appropriate; keep private reviewer exports and any unredacted annotations out of Git.
+
+---
+
 ## Quick start
 
 ### Prerequisites
